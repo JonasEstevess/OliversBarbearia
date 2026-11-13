@@ -128,7 +128,7 @@ document.querySelector('[data-team]').innerHTML =
     .map(
       (b) => `
     <article class="barber" data-reveal>
-      <span class="barber__initials" aria-hidden="true">${esc(b.name.split(' ').map((p) => p[0]).join(''))}</span>
+      ${b.photo ? `<img class="barber__photo" src="${esc(b.photo)}" alt="${esc(b.name)}" loading="lazy">` : `<span class="barber__initials" aria-hidden="true">${esc(b.name.split(' ').map((p) => p[0]).join(''))}</span>`}
       <div><span class="barber__role">${esc(b.specialty)}</span><h3>${esc(b.name)}</h3></div>
       <button class="btn btn--ghost" data-book data-barber="${b.id}">Agendar com ${esc(b.name.split(' ')[0])} <span class="arrow">→</span></button>
     </article>`
@@ -143,7 +143,8 @@ document.querySelector('[data-team]').innerHTML =
 // ---------- galeria ----------
 const track = document.querySelector('[data-gallery]');
 track.innerHTML =
-  [...IMG.cuts, IMG.front].map((src, i) => `<figure class="gallery__item" style="margin:0"><img src="${src}" alt="Trabalho da Oliver's Barbearia ${i + 1}" loading="lazy"></figure>`).join('') +
+  IMG.cuts.map((src, i) => `<figure class="gallery__item" style="margin:0"><img src="${src}" alt="Corte feito na Oliver's Barbearia ${i + 1}" loading="lazy"></figure>`).join('') +
+  IMG.space.map((p) => `<figure class="gallery__item gallery__item--space" style="margin:0"><img src="${p.src}" alt="${esc(p.caption)} na Oliver's Barbearia" loading="lazy"><figcaption>${esc(p.caption)}</figcaption></figure>`).join('') +
   `<div class="gallery__item gallery__item--cta" data-book role="button" tabindex="0"><div><strong>Quero<br>o meu</strong><p>Agendar agora →</p></div></div>`;
 
 const gallery = document.querySelector('.gallery');

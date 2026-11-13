@@ -145,7 +145,7 @@ function viewBarbers() {
     <div class="barber-opts">${opts
       .map(
         (b) => `<button class="barber-opt ${state.barberId === b.id ? 'is-on' : ''}" data-pick="barber" data-value="${b.id}" aria-pressed="${state.barberId === b.id}">
-          <span class="avatar">${b.id === 'any' ? '✦' : esc(b.name.split(' ').map((p) => p[0]).join(''))}</span>
+          <span class="avatar">${b.photo ? `<img src="${esc(b.photo)}" alt="">` : b.id === 'any' ? '✦' : esc(b.name.split(' ').map((p) => p[0]).join(''))}</span>
           <span><strong>${esc(b.name)}</strong><small class="muted">${esc(b.specialty)}</small></span>
         </button>`
       )

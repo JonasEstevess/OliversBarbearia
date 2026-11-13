@@ -1,4 +1,4 @@
-// Dados da Oliver's Barbearia (fonte: Booksy, Google Maps e Instagram).
+// Dados da Oliver's Barbearia.
 
 export const shop = {
   name: "Oliver's Barbearia",
@@ -11,7 +11,7 @@ export const shop = {
   instagram: 'oliversbarbearia01',
   mapsUrl: 'https://maps.app.goo.gl/?q=Oliver%27s+Barbearia+R.+Serra+dos+Dois+Irm%C3%A3os+474',
   rating: 4.8,
-  reviews: 123,
+  reviews: 21, // avaliações no Google
   timezone: 'America/Sao_Paulo',
 };
 
@@ -26,9 +26,10 @@ export const openingHours = {
   6: [['09:00', '14:00'], ['15:00', '20:00']],
 };
 
+// photo: caminho em public/img (ex.: '/img/equipe/tayson.jpg'). Sem foto, mostra as iniciais.
 export const barbers = [
-  { id: 'tayson', name: 'Tayson Silva', role: 'Barbeiro', specialty: 'Barbeiro' },
-  { id: 'luiz', name: 'Luiz', role: 'Barbeiro', specialty: 'Barbeiro' },
+  { id: 'tayson', name: 'Tayson Silva', role: 'Barbeiro', specialty: 'Barbeiro', photo: null },
+  { id: 'luiz', name: 'Luiz', role: 'Barbeiro', specialty: 'Barbeiro', photo: null },
 ];
 
 export const categories = [
