@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Painel — Oliver's Barbearia</title>
+  <meta name="theme-color" content="#0b0a08">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/account.css">
+</head>
+<body>
+  <header class="nav is-scrolled">
+    <div class="container nav__inner">
+      <a class="brand" href="/"><img data-img="logo" alt="" width="44" height="44"><span>Oliver's</span></a>
+      <div class="nav__actions"><span data-user-slot></span></div>
+    </div>
+  </header>
+
+  <main class="page container">
+    <div class="page__head">
+      <div>
+        <p class="eyebrow">Painel da barbearia</p>
+        <h1 class="display">Agenda</h1>
+      </div>
+      <div class="toolbar">
+        <div class="day-nav">
+          <button data-shift="-1" aria-label="Dia anterior">←</button>
+          <input class="input" type="date" data-date aria-label="Data">
+          <button data-shift="1" aria-label="Próximo dia">→</button>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-today>Hoje</button>
+        <select class="input" data-barber aria-label="Barbeiro"><option value="">Todos os barbeiros</option></select>
+      </div>
+    </div>
+
+    <p class="day-label" data-day-label></p>
+
+    <div class="kpis">
+      <div class="kpi"><small>Agendamentos</small><strong data-k="total">0</strong></div>
+      <div class="kpi kpi--gold"><small>Faturamento previsto</small><strong data-k="revenue">R$ 0</strong></div>
+      <div class="kpi"><small>Concluídos</small><strong data-k="done">0</strong></div>
+      <div class="kpi"><small>Cancelados</small><strong data-k="cancelled">0</strong></div>
+    </div>
+
+    <div class="timeline" data-timeline></div>
+  </main>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>
