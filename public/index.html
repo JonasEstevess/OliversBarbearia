@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Oliver's Barbearia — Agende seu horário</title>
+  <meta name="description" content="Oliver's Barbearia, Jardim Amália — São Paulo. Especialista em afro desde 2014. Agende corte, barba e sobrancelha online em segundos.">
+  <meta name="theme-color" content="#0b0a08">
+  <meta property="og:title" content="Oliver's Barbearia">
+  <meta property="og:description" content="Especialista em afro desde 2014. Agende online.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <link rel="stylesheet" href="/css/booking.css">
+</head>
+<body>
+  <div class="cursor" aria-hidden="true"><span></span></div>
+
+  <header class="nav">
+    <div class="container nav__inner">
+      <a class="brand" href="/" aria-label="Oliver's Barbearia — início">
+        <img data-img="logo" alt="" width="44" height="44">
+        <span>Oliver's</span>
+      </a>
+      <nav class="nav__links" aria-label="Seções">
+        <a href="#servicos">Serviços</a>
+        <a href="#equipe">Equipe</a>
+        <a href="#galeria">Cortes</a>
+        <a href="#local">Local</a>
+      </nav>
+      <div class="nav__actions">
+        <span data-user-slot></span>
+        <button class="btn btn--sm" data-book>Agendar</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="topo">
+      <div class="container hero__top">
+        <span class="chip" data-open-status><span class="dot"></span> Carregando…</span>
+        <span class="chip">★ 4.8 <span class="muted">· 123 avaliações</span></span>
+      </div>
+
+      <h1 class="display hero__title" aria-label="Oliver's Barbearia">
+        <span class="hero__line" data-split>Oliver's</span>
+      </h1>
+
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="hero__lead"><span class="serif">Barbearia desde 2014</span> no Jardim Amália. Especialista em afro, degradê na régua e barba na toalha quente.</p>
+          <div class="hero__ctas">
+            <button class="btn magnetic" data-book>Agendar horário <span class="arrow">→</span></button>
+            <a class="btn btn--ghost" href="#servicos">Ver serviços</a>
+          </div>
+        </div>
+
+        <figure class="hero__media">
+          <img data-img="front" alt="Fachada da Oliver's Barbearia" loading="eager">
+          <figcaption class="next-slot" data-next-slot>
+            <span class="next-slot__label">Próximo horário livre</span>
+            <strong class="next-slot__time">—</strong>
+            <button class="next-slot__go" data-book aria-label="Reservar este horário">↗</button>
+          </figcaption>
+        </figure>
+      </div>
+
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>Degradê</span><i>✦</i><span>Afro</span><i>✦</i><span>Barba na navalha</span><i>✦</i><span>Toalha quente</span><i>✦</i><span>Sobrancelha</span><i>✦</i><span>Pigmentação</span><i>✦</i>
+        <span>Degradê</span><i>✦</i><span>Afro</span><i>✦</i><span>Barba na navalha</span><i>✦</i><span>Toalha quente</span><i>✦</i><span>Sobrancelha</span><i>✦</i><span>Pigmentação</span><i>✦</i>
+      </div>
+    </div>
+
+    <!-- MANIFESTO -->
+    <section class="manifesto container" id="manifesto">
+      <p class="eyebrow" data-reveal>A casa</p>
+      <p class="manifesto__text" data-words>
+        Aqui o corte sai na régua, a barba sai na navalha e você sai sabendo que voltou pro lugar certo. Agenda online, sem fila, sem espera.
+      </p>
+      <div class="stats">
+        <div class="stat" data-reveal><strong data-count="12">0</strong><span>anos de casa</span></div>
+        <div class="stat" data-reveal><strong data-count="4.8" data-decimals="1">0</strong><span>nota no Booksy</span></div>
+        <div class="stat" data-reveal><strong data-count="17">0</strong><span>serviços</span></div>
+        <div class="stat" data-reveal><strong>30s</strong><span>pra agendar</span></div>
+      </div>
+    </section>
+
+    <!-- SERVIÇOS -->
+    <section class="services" id="servicos">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow" data-reveal>Cardápio</p>
+            <h2 class="display section-title" data-reveal>Serviços <span class="serif">&amp; preços</span></h2>
+          </div>
+          <div class="filters" role="tablist" aria-label="Categorias" data-filters></div>
+        </div>
+        <ul class="service-list" data-services></ul>
+      </div>
+      <div class="hover-img" aria-hidden="true"><img alt=""></div>
+    </section>
+
+    <!-- COMO FUNCIONA -->
+    <section class="steps container">
+      <p class="eyebrow" data-reveal>Como funciona</p>
+      <ol class="steps__list">
+        <li data-reveal><span class="steps__n">01</span><h3>Escolha o serviço</h3><p class="muted">Corte, barba, combo ou química — preço e duração na hora.</p></li>
+        <li data-reveal><span class="steps__n">02</span><h3>Escolha quem e quando</h3><p class="muted">Seu barbeiro favorito ou o primeiro livre. Só aparecem horários disponíveis.</p></li>
+        <li data-reveal><span class="steps__n">03</span><h3>Pronto, tá marcado</h3><p class="muted">Confirmação na hora, lembrete no seu calendário e cancelamento pela sua conta.</p></li>
+      </ol>
+    </section>
+
+    <!-- EQUIPE -->
+    <section class="team container" id="equipe">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" data-reveal>Equipe</p>
+          <h2 class="display section-title" data-reveal>Quem faz <span class="serif">acontecer</span></h2>
+        </div>
+      </div>
+      <div class="team__grid" data-team></div>
+    </section>
+
+    <!-- GALERIA -->
+    <section class="gallery" id="galeria">
+      <div class="gallery__sticky">
+        <div class="container gallery__head">
+          <p class="eyebrow">Trabalhos</p>
+          <h2 class="display section-title">Na <span class="serif">régua</span></h2>
+        </div>
+        <div class="gallery__track" data-gallery></div>
+      </div>
+    </section>
+
+    <!-- AVALIAÇÃO -->
+    <section class="quote container">
+      <div class="quote__stars" data-reveal>★★★★★</div>
+      <blockquote class="quote__text" data-reveal>“A melhor barbearia da zona sul de São Paulo.”</blockquote>
+      <p class="muted" data-reveal>Cliente no Google · 4.8 de média em 123 avaliações no Booksy</p>
+    </section>
+
+    <!-- LOCAL -->
+    <section class="location container" id="local">
+      <div class="location__info">
+        <p class="eyebrow" data-reveal>Onde estamos</p>
+        <h2 class="display section-title" data-reveal>Jardim <span class="serif">Amália</span></h2>
+        <address class="location__address" data-reveal>
+          R. Serra dos Dois Irmãos, 474<br>Jardim Amália — São Paulo/SP<br>CEP 05890-300
+        </address>
+        <table class="hours" data-hours data-reveal></table>
+        <div class="location__actions" data-reveal>
+          <a class="btn btn--ghost btn--sm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=Oliver%27s+Barbearia,+R.+Serra+dos+Dois+Irm%C3%A3os,+474,+S%C3%A3o+Paulo">Como chegar</a>
+          <a class="btn btn--ghost btn--sm" target="_blank" rel="noopener" href="https://wa.me/5511951217241">WhatsApp</a>
+          <a class="btn btn--ghost btn--sm" target="_blank" rel="noopener" href="https://www.instagram.com/oliversbarbearia01/">Instagram</a>
+        </div>
+      </div>
+      <div class="location__map" data-reveal>
+        <iframe title="Mapa da Oliver's Barbearia" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=-23.6641994,-46.7885999&z=16&output=embed"></iframe>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="final">
+      <div class="container">
+        <h2 class="display final__title" data-reveal>Bora dar<br>um <span class="serif">tapa</span><br>no visual?</h2>
+        <button class="btn magnetic final__btn" data-book data-reveal>Agendar agora <span class="arrow">→</span></button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="brand"><img data-img="logo" alt="" width="44" height="44"><span>Oliver's Barbearia</span></div>
+      <p class="muted">R. Serra dos Dois Irmãos, 474 · (11) 95121-7241</p>
+      <p class="muted">© <span data-year></span> Oliver's Barbearia</p>
+    </div>
+  </footer>
+
+  <button class="mobile-cta btn" data-book>Agendar horário <span class="arrow">→</span></button>
+
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script type="module" src="/js/home.js"></script>
+</body>
+</html>
