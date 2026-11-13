@@ -233,3 +233,8 @@ export function icsFor(appt, shop) {
 }
 
 export function waLink(phone, text) { return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`; }
+
+// ---------- PWA ----------
+if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
+  addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
