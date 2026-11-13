@@ -7,7 +7,10 @@ import { dirname, resolve } from 'node:path';
 const remote = process.env.TURSO_DATABASE_URL;
 let url = remote;
 if (!remote) {
-  const file = resolve(process.env.DB_FILE || 'data/olivers.db');
+  // Na Vercel sem Turso só /tmp é gravável (dados temporários, apenas para testes).
+  const fallback = process.env.VERCEL ? '/tmp/olivers.db' : 'data/olivers.db';
+  if (process.env.VERCEL) console.warn('TURSO_DATABASE_URL não definido: usando banco temporário em /tmp.');
+  const file = resolve(process.env.DB_FILE || fallback);
   mkdirSync(dirname(file), { recursive: true });
   url = `file:${file}`;
 }
