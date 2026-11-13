@@ -59,6 +59,17 @@ Tudo fica em [`server/catalog.js`](server/catalog.js). Os preços estão em cent
 - Commits seguem o padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (`feat:`, `fix:`, `docs:`, `chore:`…).
 - Cada funcionalidade é feita em sua própria branch (`feat/...`, `fix/...`) e integrada na `main` com merge `--no-ff`.
 
+## Aplicativo Android
+
+O app é um **TWA** (Trusted Web Activity) gerado pelo [PWABuilder](https://www.pwabuilder.com): abre o site em tela cheia, sem barra do navegador, e recebe toda atualização do site na hora.
+
+- **Página de instalação:** `/app`, que detecta Android, iPhone ou computador (QR code). O QR code em alta resolução está em `docs/qr-app.png`.
+- **APK para instalação direta:** `public/download/olivers-barbearia.apk` (pacote `br.com.oliversbarbearia.app`).
+- **Verificação de domínio:** `public/.well-known/assetlinks.json`, que liga o app ao site.
+- **iPhone:** instala como PWA (Safari → Compartilhar → Adicionar à Tela de Início).
+
+A chave de assinatura (`signing.keystore`) **não fica no repositório**. Guarde-a com segurança: ela é necessária para publicar atualizações do app ou enviá-lo à Play Store no futuro (o arquivo `.aab` gerado junto já serve para isso).
+
 ## Publicação na Vercel
 
 A Vercel não guarda arquivos entre requisições, então em produção o banco fica no **Turso** (SQLite na nuvem, plano grátis).

@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "br.com.oliversbarbearia.app",
+        "sha256_cert_fingerprints": ["AC:99:DE:DE:3C:DA:EA:58:60:20:B9:B3:B4:02:42:35:6D:A5:F7:7F:B2:3F:E9:1E:DB:D9:EB:9C:7F:65:7E:E3"]
+      }
+    }]

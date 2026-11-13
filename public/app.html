@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Baixe o app — Oliver's Barbearia</title>
+  <meta name="description" content="Instale o app da Oliver's Barbearia e agende seu corte em segundos.">
+  <meta name="theme-color" content="#0b0a08">
+  <meta property="og:title" content="App da Oliver's Barbearia">
+  <meta property="og:description" content="Agende seu corte em segundos. Android e iPhone.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <style>
+    .app { min-height: 100svh; display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: center; padding-top: 110px; padding-bottom: 60px; }
+    .app h1 { font-size: clamp(64px, 11vw, 160px); margin: 14px 0 20px; }
+    .app__lead { font-size: clamp(17px, 1.5vw, 20px); max-width: 34ch; margin: 0 0 32px; }
+    .app__icon { width: 96px; height: 96px; border-radius: 24px; border: 1px solid var(--line-2); box-shadow: 0 20px 60px -20px rgba(212, 169, 76, 0.5); }
+    .panel { background: var(--ink-2); border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(24px, 3vw, 36px); }
+    .panel[hidden] { display: none; }
+    .panel h2 { font-family: var(--f-display); font-weight: 400; text-transform: uppercase; font-size: 34px; line-height: 1; margin: 0 0 6px; }
+    .qr { background: var(--cream); border-radius: 20px; padding: 18px; width: min(100%, 300px); margin: 20px auto 16px; }
+    .qr img { width: 100%; height: auto; }
+    .steps { list-style: none; padding: 0; margin: 20px 0 24px; display: grid; gap: 12px; counter-reset: s; }
+    .steps li { display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; counter-increment: s; color: var(--muted); font-size: 15px; }
+    .steps li::before { content: counter(s); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: var(--gold-ink); font-weight: 700; font-size: 14px; }
+    .steps b { color: var(--cream); font-weight: 600; }
+    .tabs-os { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tabs-os button { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); font-size: 14px; }
+    .tabs-os button[aria-selected='true'] { background: var(--cream); color: var(--ink); border-color: var(--cream); font-weight: 600; }
+    .meta { font-size: 13px; color: var(--muted); margin-top: 14px; }
+    .center { text-align: center; }
+    @media (max-width: 860px) { .app { grid-template-columns: 1fr; padding-top: 96px; } }
+  </style>
+</head>
+<body>
+  <header class="nav is-scrolled">
+    <div class="container nav__inner">
+      <a class="brand" href="/"><img src="/img/logo.jpg" alt="" width="44" height="44"><span>Oliver's</span></a>
+      <div class="nav__actions"><a class="btn btn--sm btn--ghost" href="/">Ir para o site</a></div>
+    </div>
+  </header>
+
+  <main class="container app">
+    <section>
+      <img class="app__icon" src="/icons/icon-192.png" alt="Ícone do app Oliver's Barbearia" width="96" height="96">
+      <h1 class="display">Baixe o <span class="serif">app</span></h1>
+      <p class="app__lead">Agende seu corte em segundos, veja seus próximos horários e receba tudo direto no celular. Grátis.</p>
+      <div class="tabs-os" role="tablist" aria-label="Sistema">
+        <button role="tab" data-os="android">Android</button>
+        <button role="tab" data-os="ios">iPhone</button>
+        <button role="tab" data-os="desktop">Computador</button>
+      </div>
+    </section>
+
+    <section>
+      <!-- ANDROID -->
+      <div class="panel" data-panel="android" hidden>
+        <p class="eyebrow">Android</p>
+        <h2>Instalar no Android</h2>
+        <button class="btn btn--block" data-pwa-install hidden style="margin-top:20px">Instalar agora <span class="arrow">→</span></button>
+        <ol class="steps">
+          <li><span>Toque em <b>Baixar app</b> abaixo.</span></li>
+          <li><span>Abra o arquivo baixado <b>olivers-barbearia.apk</b>.</span></li>
+          <li><span>Se aparecer um aviso, toque em <b>Configurações → Permitir desta fonte</b> e volte.</span></li>
+          <li><span>Toque em <b>Instalar</b>. Pronto, o ícone aparece na sua tela.</span></li>
+        </ol>
+        <a class="btn btn--block" href="/download/olivers-barbearia.apk" download>Baixar app (3 MB) <span class="arrow">↓</span></a>
+        <p class="meta">Versão 1.0 · o app abre sempre a versão mais recente do site.</p>
+      </div>
+
+      <!-- IPHONE -->
+      <div class="panel" data-panel="ios" hidden>
+        <p class="eyebrow">iPhone</p>
+        <h2>Instalar no iPhone</h2>
+        <ol class="steps">
+          <li><span>Abra <b>oliversbarbearia.vercel.app</b> no <b>Safari</b>.</span></li>
+          <li><span>Toque no botão <b>Compartilhar</b> (o quadrado com a seta pra cima).</span></li>
+          <li><span>Escolha <b>Adicionar à Tela de Início</b> e toque em <b>Adicionar</b>.</span></li>
+        </ol>
+        <a class="btn btn--block" href="/">Abrir o site <span class="arrow">→</span></a>
+      </div>
+
+      <!-- COMPUTADOR -->
+      <div class="panel center" data-panel="desktop" hidden>
+        <p class="eyebrow">Aponte a câmera</p>
+        <h2>Escaneie com o celular</h2>
+        <div class="qr"><img src="/img/qr-app.svg" alt="QR code para baixar o app da Oliver's Barbearia" width="300" height="300"></div>
+        <p class="muted">Abra a câmera do celular e aponte para o código.<br>Ou acesse <b style="color:var(--cream)">oliversbarbearia.vercel.app/app</b></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ua = navigator.userAgent;
+    const detected = /android/i.test(ua) ? 'android' : /iphone|ipad|ipod/i.test(ua) ? 'ios' : 'desktop';
+    const tabs = document.querySelectorAll('[data-os]');
+    function show(os) {
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.os === os)));
+      document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== os));
+    }
+    tabs.forEach((t) => t.addEventListener('click', () => show(t.dataset.os)));
+    show(detected);
+
+    // Chrome no Android: oferece instalação direta (sem baixar APK) quando disponível.
+    let deferred;
+    const pwaBtn = document.querySelector('[data-pwa-install]');
+    addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; pwaBtn.hidden = false; });
+    pwaBtn.addEventListener('click', async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; pwaBtn.hidden = true; });
+
+    if ('serviceWorker' in navigator && location.hostname !== 'localhost') navigator.serviceWorker.register('/sw.js').catch(() => {});
+  </script>
+</body>
+</html>
