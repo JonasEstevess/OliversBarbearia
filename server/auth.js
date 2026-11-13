@@ -1,8 +1,11 @@
 import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
-import { db } from './db.js';
+import { get, run } from './db.js';
 
 const COOKIE = 'ob_session';
 const SESSION_DAYS = 30;
+
+// Envolve handlers async para que erros cheguem ao middleware de erro do Express.
+export const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 export function hashPassword(password) {
   const salt = randomBytes(16);
@@ -20,10 +23,10 @@ export function verifyPassword(password, stored) {
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 
-export function createSession(res, userId) {
+export async function createSession(res, userId) {
   const token = randomBytes(32).toString('base64url');
   const expires = Date.now() + SESSION_DAYS * 864e5;
-  db.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)').run(sha(token), userId, expires);
+  await run('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)', [sha(token), userId, expires]);
   res.cookie(COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
@@ -33,9 +36,9 @@ export function createSession(res, userId) {
   });
 }
 
-export function destroySession(req, res) {
+export async function destroySession(req, res) {
   const token = readCookie(req);
-  if (token) db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(sha(token));
+  if (token) await run('DELETE FROM sessions WHERE token_hash = ?', [sha(token)]);
   res.clearCookie(COOKIE, { path: '/' });
 }
 
@@ -49,23 +52,22 @@ function readCookie(req) {
 }
 
 // Anexa req.user quando há sessão válida.
-export function loadUser(req, _res, next) {
+export const loadUser = ah(async (req, _res, next) => {
   const token = readCookie(req);
   if (token) {
-    const row = db
-      .prepare(
-        `SELECT u.id, u.name, u.email, u.phone, u.role, s.expires_at
-           FROM sessions s JOIN users u ON u.id = s.user_id
-          WHERE s.token_hash = ?`
-      )
-      .get(sha(token));
+    const row = await get(
+      `SELECT u.id, u.name, u.email, u.phone, u.role, s.expires_at
+         FROM sessions s JOIN users u ON u.id = s.user_id
+        WHERE s.token_hash = ?`,
+      [sha(token)]
+    );
     if (row && row.expires_at > Date.now()) {
       const { expires_at, ...user } = row;
       req.user = user;
     }
   }
   next();
-}
+});
 
 export function requireAuth(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Faça login para continuar.' });
@@ -77,7 +79,7 @@ export function requireAdmin(req, res, next) {
   next();
 }
 
-// Limite simples de tentativas por IP (protege login/cadastro de força bruta).
+// Limite simples de tentativas por IP (por instância do servidor).
 const attempts = new Map();
 export function rateLimit(max = 10, windowMs = 10 * 60e3) {
   return (req, res, next) => {
@@ -92,17 +94,16 @@ export function rateLimit(max = 10, windowMs = 10 * 60e3) {
   };
 }
 
-export function seedAdmin() {
+export async function seedAdmin() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
   if (!email || !password) return;
-  const exists = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (exists) return;
-  db.prepare("INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'admin')").run(
+  if (await get('SELECT id FROM users WHERE email = ?', [email])) return;
+  await run("INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'admin')", [
     'Administrador',
     email,
     '',
-    hashPassword(password)
-  );
+    hashPassword(password),
+  ]);
   console.log(`Conta admin criada: ${email}`);
 }

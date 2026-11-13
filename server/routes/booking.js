@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { db, tx } from '../db.js';
-import { requireAuth } from '../auth.js';
+import { all, get, run, tx } from '../db.js';
+import { ah, requireAuth } from '../auth.js';
 import { shop, services, barbers, categories, openingHours, CANCEL_MIN_HOURS, BOOKING_WINDOW_DAYS } from '../catalog.js';
-import { slotsFor, freeSlots, isBookableDate } from '../availability.js';
+import { slotsFor, freeSlotsByBarber, isBookableDate } from '../availability.js';
 import { isDate, nowLocal, toHHMM } from '../time.js';
 
 export const bookingRouter = Router();
@@ -30,22 +30,22 @@ bookingRouter.get('/catalog', (_req, res) => {
   res.json({ shop, services, barbers, categories, openingHours, bookingWindowDays: BOOKING_WINDOW_DAYS, today: nowLocal().date });
 });
 
-bookingRouter.get('/availability', (req, res) => {
+bookingRouter.get('/availability', ah(async (req, res) => {
   const { date, service, barber = 'any' } = req.query;
   const s = serviceById(service);
   if (!s) return res.status(400).json({ error: 'Serviço inválido.' });
   if (!isDate(date)) return res.status(400).json({ error: 'Data inválida.' });
   if (barber !== 'any' && !barberById(barber)) return res.status(400).json({ error: 'Barbeiro inválido.' });
-  const slots = slotsFor(barber, date, s.duration).map((x) => ({ time: toHHMM(x.start), barber: x.barber }));
-  res.json({ date, slots });
-});
+  const slots = (await slotsFor(barber, date, s.duration)).map((x) => ({ time: toHHMM(x.start), barber: x.barber }));
+  res.set('Cache-Control', 'no-store').json({ date, slots });
+}));
 
-bookingRouter.get('/appointments', requireAuth, (req, res) => {
-  const rows = db.prepare('SELECT * FROM appointments WHERE user_id = ? ORDER BY date DESC, start_min DESC').all(req.user.id);
+bookingRouter.get('/appointments', requireAuth, ah(async (req, res) => {
+  const rows = await all('SELECT * FROM appointments WHERE user_id = ? ORDER BY date DESC, start_min DESC', [req.user.id]);
   res.json({ appointments: rows.map(serialize) });
-});
+}));
 
-bookingRouter.post('/appointments', requireAuth, (req, res) => {
+bookingRouter.post('/appointments', requireAuth, ah(async (req, res) => {
   const { serviceId, barberId = 'any', date, time, notes } = req.body || {};
   const s = serviceById(serviceId);
   if (!s) return res.status(400).json({ error: 'Escolha um serviço.' });
@@ -57,35 +57,34 @@ bookingRouter.post('/appointments', requireAuth, (req, res) => {
   const start = h * 60 + m;
 
   try {
-    const created = tx(() => {
+    // Verificação e inserção na mesma transação de escrita: evita reserva dupla.
+    const created = await tx(async (t) => {
       const candidates = barberId === 'any' ? barbers.map((b) => b.id) : [barberId];
-      const chosen = candidates.find((id) => freeSlots(id, date, s.duration).includes(start));
-      if (!chosen) {
-        const err = new Error('Esse horário acabou de ser reservado. Escolha outro.');
-        err.status = 409;
-        throw err;
-      }
-      const { lastInsertRowid } = db
-        .prepare(
-          'INSERT INTO appointments (user_id, barber_id, service_id, date, start_min, end_min, price, notes) VALUES (?,?,?,?,?,?,?,?)'
-        )
-        .run(req.user.id, chosen, s.id, date, start, start + s.duration, s.price, notes ? String(notes).slice(0, 300) : null);
-      return db.prepare('SELECT * FROM appointments WHERE id = ?').get(lastInsertRowid);
+      const free = await freeSlotsByBarber(candidates, date, s.duration, t);
+      const chosen = candidates.find((id) => free[id].includes(start));
+      if (!chosen) throw Object.assign(new Error('Esse horário acabou de ser reservado. Escolha outro.'), { status: 409 });
+      const { lastInsertRowid } = await run(
+        'INSERT INTO appointments (user_id, barber_id, service_id, date, start_min, end_min, price, notes) VALUES (?,?,?,?,?,?,?,?)',
+        [req.user.id, chosen, s.id, date, start, start + s.duration, s.price, notes ? String(notes).slice(0, 300) : null],
+        t
+      );
+      return get('SELECT * FROM appointments WHERE id = ?', [lastInsertRowid], t);
     });
     res.status(201).json({ appointment: serialize(created) });
   } catch (err) {
+    if (!err.status) console.error(err);
     res.status(err.status || 500).json({ error: err.status ? err.message : 'Não foi possível agendar.' });
   }
-});
+}));
 
-bookingRouter.post('/appointments/:id/cancel', requireAuth, (req, res) => {
-  const a = db.prepare('SELECT * FROM appointments WHERE id = ? AND user_id = ?').get(Number(req.params.id), req.user.id);
+bookingRouter.post('/appointments/:id/cancel', requireAuth, ah(async (req, res) => {
+  const a = await get('SELECT * FROM appointments WHERE id = ? AND user_id = ?', [Number(req.params.id), req.user.id]);
   if (!a) return res.status(404).json({ error: 'Agendamento não encontrado.' });
   if (a.status !== 'booked') return res.status(400).json({ error: 'Este agendamento não pode mais ser cancelado.' });
   const now = nowLocal();
   const minutesUntil = (Date.parse(a.date) - Date.parse(now.date)) / 60000 + a.start_min - now.minute;
   if (minutesUntil < CANCEL_MIN_HOURS * 60)
     return res.status(400).json({ error: `Cancelamentos só com ${CANCEL_MIN_HOURS}h de antecedência. Fale com a gente no WhatsApp.` });
-  db.prepare("UPDATE appointments SET status = 'cancelled' WHERE id = ?").run(a.id);
+  await run("UPDATE appointments SET status = 'cancelled' WHERE id = ?", [a.id]);
   res.json({ appointment: serialize({ ...a, status: 'cancelled' }) });
-});
+}));
