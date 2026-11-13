@@ -4,9 +4,14 @@
   "private": true,
   "description": "Site de agendamento da Oliver's Barbearia",
   "type": "module",
-  "engines": { "node": ">=22.13" },
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
   }
 }
