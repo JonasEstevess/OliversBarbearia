@@ -1,4 +1,4 @@
-import { db } from './db.js';
+import { all } from './db.js';
 import { openingHours, barbers, SLOT_STEP_MIN, BOOKING_WINDOW_DAYS } from './catalog.js';
 import { nowLocal, toMin, weekday, addDays } from './time.js';
 
@@ -9,17 +9,19 @@ export function isBookableDate(date) {
   return date >= today && date <= addDays(today, BOOKING_WINDOW_DAYS);
 }
 
-function busyRanges(barberId, date) {
-  return db
-    .prepare("SELECT start_min, end_min FROM appointments WHERE barber_id = ? AND date = ? AND status IN ('booked','done')")
-    .all(barberId, date);
+async function busyByBarber(date, ex) {
+  const rows = await all(
+    "SELECT barber_id, start_min, end_min FROM appointments WHERE date = ? AND status IN ('booked','done')",
+    [date],
+    ex
+  );
+  const map = {};
+  for (const r of rows) (map[r.barber_id] ||= []).push(r);
+  return map;
 }
 
-// Horários livres (em minutos) para um barbeiro, data e duração.
-export function freeSlots(barberId, date, duration) {
-  if (!isBookableDate(date)) return [];
+function computeFree(date, duration, busy) {
   const blocks = openingHours[weekday(date)] || [];
-  const busy = busyRanges(barberId, date);
   const now = nowLocal();
   const minStart = date === now.date ? now.minute + LEAD_MIN : 0;
   const out = [];
@@ -35,12 +37,18 @@ export function freeSlots(barberId, date, duration) {
   return out;
 }
 
+// Horários livres (em minutos) de cada barbeiro pedido, numa única consulta.
+export async function freeSlotsByBarber(ids, date, duration, ex) {
+  if (!isBookableDate(date)) return Object.fromEntries(ids.map((id) => [id, []]));
+  const busy = await busyByBarber(date, ex);
+  return Object.fromEntries(ids.map((id) => [id, computeFree(date, duration, busy[id] || [])]));
+}
+
 // Para "qualquer barbeiro": união dos horários, com o barbeiro livre de cada horário.
-export function slotsFor(barberId, date, duration) {
+export async function slotsFor(barberId, date, duration) {
   const ids = barberId === 'any' ? barbers.map((b) => b.id) : [barberId];
+  const free = await freeSlotsByBarber(ids, date, duration);
   const map = new Map();
-  for (const id of ids) {
-    for (const s of freeSlots(id, date, duration)) if (!map.has(s)) map.set(s, id);
-  }
+  for (const id of ids) for (const s of free[id]) if (!map.has(s)) map.set(s, id);
   return [...map.entries()].sort((a, b) => a[0] - b[0]).map(([start, barber]) => ({ start, barber }));
 }

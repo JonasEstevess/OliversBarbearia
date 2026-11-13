@@ -15,9 +15,9 @@ Site de agendamento online da **Oliver's Barbearia** — R. Serra dos Dois Irmã
 
 ## Stack
 
-- Node.js 22.13+ (usa o `node:sqlite` nativo)
+- Node.js 20+
 - Express 4
-- SQLite (arquivo em `data/olivers.db`, criado automaticamente)
+- SQLite via [libSQL](https://github.com/tursodatabase/libsql-client-ts): arquivo local `data/olivers.db` em desenvolvimento e [Turso](https://turso.tech) em produção
 - Front-end em HTML, CSS e JavaScript puros (sem build), com [Lenis](https://github.com/darkroomengineering/lenis) para a rolagem suave
 
 ## Como rodar
@@ -33,8 +33,11 @@ Acesse http://localhost:3000. A conta de administrador do `.env` é criada na pr
 ## Estrutura
 
 ```
+api/
+  index.js          # função serverless da Vercel (reaproveita o app)
 server/
-  index.js          # app express, segurança e rotas
+  app.js            # app express, segurança e rotas
+  index.js          # servidor local (npm run dev)
   catalog.js        # serviços, preços, barbeiros e horários
   availability.js   # cálculo de horários livres
   auth.js           # senhas (scrypt), sessões e permissões
@@ -56,6 +59,16 @@ Tudo fica em [`server/catalog.js`](server/catalog.js). Os preços estão em cent
 - Commits seguem o padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (`feat:`, `fix:`, `docs:`, `chore:`…).
 - Cada funcionalidade é feita em sua própria branch (`feat/...`, `fix/...`) e integrada na `main` com merge `--no-ff`.
 
-## Publicação
+## Publicação na Vercel
 
-Em produção, defina `NODE_ENV=production` (os cookies passam a exigir HTTPS) e use um host com disco persistente para o arquivo SQLite (ex.: Railway, Render com disco, Fly.io ou uma VPS).
+A Vercel não guarda arquivos entre requisições, então em produção o banco fica no **Turso** (SQLite na nuvem, plano grátis).
+
+1. **Banco:** na Vercel, abra *Storage → Marketplace → Turso* e crie um banco. A integração já cria `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN` no projeto.
+   Alternativa: crie em [turso.tech](https://turso.tech) e copie a URL e o token.
+2. **Projeto:** em [vercel.com/new](https://vercel.com/new), importe este repositório do GitHub (Framework: *Other*; o `vercel.json` já configura tudo).
+3. **Variáveis de ambiente** (*Settings → Environment Variables*):
+   - `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN` (se não vieram da integração)
+   - `ADMIN_EMAIL` e `ADMIN_PASSWORD` — conta do painel, criada no primeiro acesso
+4. **Deploy.** As tabelas são criadas automaticamente na primeira requisição.
+
+Cada push na `main` gera um novo deploy; branches geram previews.
