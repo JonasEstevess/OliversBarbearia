@@ -5,3 +5,8 @@ data/
 .env
 .DS_Store
 .claude/
+
+# chaves de assinatura do app Android (nunca versionar)
+*.keystore
+*.jks
+signing-key-info.txt

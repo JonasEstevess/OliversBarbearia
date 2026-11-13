@@ -41,7 +41,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Rota não encontrada.' }));
 
 // Em desenvolvimento o Express serve o front; na Vercel, a pasta public/ é servida pela CDN.
-if (existsSync(resolve('public'))) app.use(express.static(resolve('public'), { extensions: ['html'] }));
+if (existsSync(resolve('public'))) app.use(express.static(resolve('public'), { extensions: ['html'], dotfiles: 'allow' }));
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
