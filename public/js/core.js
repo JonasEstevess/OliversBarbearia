@@ -1,15 +1,9 @@
 // Utilitários compartilhados: API, sessão, formatação, toasts, nav e modal de login.
 
 export const IMG = {
-  logo: 'https://d2zdpiztbgorvt.cloudfront.net/region1/br/277061/logo/401326e823d545c69c51fc28934d7a-olivers-barbearia-logo-8326450c682f48a6a7cedb470302b5-booksy.jpeg',
-  front: 'https://d2zdpiztbgorvt.cloudfront.net/region1/br/277061/biz_photo/629c3a0df77c4c94b2c65e4dbcd7fd-olivers-barbearia-biz-photo-c534410adc3e4d978ea161041aa6c8-booksy.jpeg',
-  cuts: [
-    'https://d2zdpiztbgorvt.cloudfront.net/region1/br/277061/inspiration/da9df19101974039b99edd9cd975bd-olivers-barbearia-inspiration-121c6a5a315d4bf8890cb66d022076-booksy.jpeg',
-    'https://d2zdpiztbgorvt.cloudfront.net/region1/br/277061/inspiration/44fea6b89ff34499b257b172e2d363-olivers-barbearia-inspiration-72c79193f6f945f1a3c8e857f2e4af-booksy.jpeg',
-    'https://d2zdpiztbgorvt.cloudfront.net/region1/br/277061/inspiration/4a3a302401514874883b4f02f2d722-olivers-barbearia-inspiration-e8607f8b5d754193891736d772dfd3-booksy.jpeg',
-    'https://d2zdpiztbgorvt.cloudfront.net/region1/br/277061/inspiration/c17bef3abfdf41a39b6a4a5fffdc1a-olivers-barbearia-inspiration-c5cbc8b9bfee42199fbc596c2a9e33-booksy.jpeg',
-    'https://d2zdpiztbgorvt.cloudfront.net/region1/br/277061/inspiration/d7e852c2cd1e4064944a355206cbba-olivers-barbearia-inspiration-ab78f92bc4774ac79de782e8bc30d8-booksy.jpeg',
-  ],
+  logo: '/img/logo.jpg',
+  front: '/img/fachada.jpg',
+  cuts: ['/img/corte-1.jpg', '/img/corte-2.jpg', '/img/corte-3.jpg', '/img/corte-4.jpg', '/img/corte-5.jpg'],
 };
 
 export async function api(path, { method = 'GET', body } = {}) {
