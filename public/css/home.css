@@ -174,6 +174,9 @@
 }
 .barber__initials { position: absolute; right: -0.05em; bottom: -0.18em; font-family: var(--f-display); font-size: 320px; line-height: 1; color: rgba(212, 169, 76, 0.08); z-index: -1; transition: transform 1s var(--ease), color 0.6s; }
 .barber:hover .barber__initials { transform: translateY(-20px) scale(1.04); color: rgba(212, 169, 76, 0.16); }
+.barber__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; opacity: 0.55; transition: transform 1s var(--ease), opacity 0.6s; }
+.barber:has(.barber__photo)::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(11,10,8,0.2), rgba(11,10,8,0.85)); }
+.barber:hover .barber__photo { transform: scale(1.05); opacity: 0.75; }
 .barber__role { color: var(--gold); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; }
 .barber h3 { font-family: var(--f-display); font-weight: 400; font-size: clamp(48px, 6vw, 80px); line-height: 0.9; text-transform: uppercase; margin: 10px 0 8px; }
 
@@ -185,6 +188,7 @@
 .gallery__item:nth-child(even) { transform: translateY(40px); }
 .gallery__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
 .gallery__item:hover img { transform: scale(1.06); }
+.gallery__item--space figcaption { position: absolute; left: 16px; bottom: 16px; padding: 6px 12px; border-radius: 999px; background: rgba(11, 10, 8, 0.7); backdrop-filter: blur(8px); font-size: 13px; font-weight: 600; }
 .gallery__item--cta { display: grid; place-items: center; text-align: center; background: var(--gold); color: var(--gold-ink); padding: 24px; cursor: pointer; }
 .gallery__item--cta strong { font-family: var(--f-display); font-weight: 400; font-size: 54px; line-height: 0.9; text-transform: uppercase; display: block; }
 @media (max-width: 860px) {

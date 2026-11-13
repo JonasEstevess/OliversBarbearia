@@ -4,6 +4,10 @@ export const IMG = {
   logo: '/img/logo.jpg',
   front: '/img/fachada.jpg',
   cuts: ['/img/corte-1.jpg', '/img/corte-2.jpg', '/img/corte-3.jpg', '/img/corte-4.jpg', '/img/corte-5.jpg'],
+  space: [
+    { src: '/img/ambiente-cafe.jpg', caption: 'Cafezinho' },
+    { src: '/img/ambiente-petiscos.jpg', caption: 'Petiscos' },
+  ],
 };
 
 export async function api(path, { method = 'GET', body } = {}) {
