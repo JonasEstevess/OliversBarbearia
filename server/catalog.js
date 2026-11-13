@@ -27,8 +27,8 @@ export const openingHours = {
 };
 
 export const barbers = [
-  { id: 'tayson', name: 'Tayson Silva', role: 'Barbeiro', specialty: 'Degradê & Afro' },
-  { id: 'luiz', name: 'Luiz', role: 'Barbeiro', specialty: 'Tesoura & Barba' },
+  { id: 'tayson', name: 'Tayson Silva', role: 'Barbeiro', specialty: 'Barbeiro' },
+  { id: 'luiz', name: 'Luiz', role: 'Barbeiro', specialty: 'Barbeiro' },
 ];
 
 export const categories = [
