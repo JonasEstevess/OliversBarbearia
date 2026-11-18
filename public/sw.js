@@ -1,9 +1,9 @@
 // Service worker: site abre rápido e funciona com internet instável.
 // API nunca é cacheada (horários precisam estar sempre atualizados).
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `olivers-${VERSION}`;
-const CORE = ['/', '/conta', '/css/base.css', '/css/home.css', '/css/booking.css', '/css/account.css',
-  '/js/core.js', '/js/home.js', '/js/booking.js', '/js/account.js', '/img/logo.jpg', '/icons/icon-192.png'];
+const CORE = ['/m/', '/m/app.css?v=2', '/m/app.js?v=2', '/js/pricing.js', '/', '/conta', '/css/base.css', '/css/home.css', '/css/booking.css', '/css/account.css',
+  '/js/core.js', '/js/home.js', '/js/booking.js', '/js/account.js', '/img/logo.jpg?v=3', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -24,7 +24,7 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => put(e.request, res))));
     return;
   }
-  e.respondWith(fetch(e.request).then((res) => put(e.request, res)).catch(() => caches.match(e.request).then((hit) => hit || caches.match('/'))));
+  e.respondWith(fetch(e.request).then((res) => put(e.request, res)).catch(() => caches.match(e.request).then((hit) => hit || caches.match(url.pathname.startsWith('/m') ? '/m/' : '/'))));
 });
 
 function put(req, res) {
