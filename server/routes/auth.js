@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { get, run, getSetting } from '../db.js';
 import {
   ah, hashPassword, verifyPassword, createSession, destroySession, rateLimit, requireAuth,
-  adminExists, safeEqual, consumeResetToken, findInvite, deleteInvite, createResetToken,
+  adminExists, safeEqual, consumeResetToken, findInvite, deleteInvite, createResetToken, promoteConfiguredOwner,
 } from '../auth.js';
 import { mailEnabled, sendPasswordResetEmail } from '../mail.js';
 import { getBarber } from '../store.js';
@@ -46,8 +46,9 @@ authRouter.post('/register', rateLimit(10), ah(async (req, res) => {
     "INSERT INTO users (name, email, phone, password_hash, accepted_terms_at) VALUES (?, ?, ?, ?, datetime('now'))",
     [data.name, data.email, data.phone, hashPassword(data.password)]
   );
+  await promoteConfiguredOwner(data.email);
   await createSession(res, id);
-  res.status(201).json({ user: { id, name: data.name, email: data.email, phone: data.phone, role: 'client' } });
+  res.status(201).json({ user: await withStaff(await get('SELECT * FROM users WHERE id = ?', [id])) });
 }));
 
 authRouter.post('/login', rateLimit(10), ah(async (req, res) => {
@@ -56,8 +57,9 @@ authRouter.post('/login', rateLimit(10), ah(async (req, res) => {
   const user = await get('SELECT * FROM users WHERE email = ?', [email]);
   if (!user || !verifyPassword(password, user.password_hash))
     return res.status(401).json({ error: 'E-mail ou senha incorretos.' });
+  const promoted = await promoteConfiguredOwner(user.email);
   await createSession(res, user.id);
-  res.json({ user: await withStaff(user) });
+  res.json({ user: await withStaff(promoted ? await get('SELECT * FROM users WHERE id = ?', [user.id]) : user) });
 }));
 
 authRouter.post('/logout', ah(async (req, res) => {

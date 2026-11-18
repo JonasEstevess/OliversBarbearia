@@ -113,7 +113,32 @@ export function rateLimit(max = 10, windowMs = 10 * 60e3) {
   };
 }
 
+// OWNER_EMAIL (variável de ambiente, ex.: na Vercel): promove essa conta a dona.
+// Só promove contas que já existem — a pessoa usa a própria senha; nunca cria conta sem senha.
+// Aceita vários e-mails separados por vírgula.
+const ownerEmails = () =>
+  String(process.env.OWNER_EMAIL || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+
+export async function promoteConfiguredOwner(email) {
+  const list = ownerEmails();
+  if (!list.length || (email && !list.includes(String(email).toLowerCase()))) return false;
+  const targets = email ? [String(email).toLowerCase()] : list;
+  let promoted = false;
+  for (const e of targets) {
+    const { changes } = await run(
+      "UPDATE users SET role = 'admin', staff_role = 'owner' WHERE email = ? AND NOT (role = 'admin' AND COALESCE(staff_role, 'owner') = 'owner')",
+      [e]
+    );
+    if (changes) {
+      promoted = true;
+      console.log('Conta promovida a dona via OWNER_EMAIL.');
+    }
+  }
+  return promoted;
+}
+
 export async function seedAdmin() {
+  await promoteConfiguredOwner();
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
   if (!email || !password) return;
