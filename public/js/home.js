@@ -35,6 +35,8 @@ document.addEventListener('click', (e) => {
 });
 
 const { shop, services, barbers, categories, openingHours, today } = await api('/catalog');
+const svcCount = document.querySelector('[data-services-count]');
+if (svcCount) svcCount.dataset.count = services.length;
 
 // ---------- status aberto/fechado + horários ----------
 const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
