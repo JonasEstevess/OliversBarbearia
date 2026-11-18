@@ -51,11 +51,11 @@ export const services = [
   { id: 'barba-toalha', cat: 'barba', name: 'Barba na toalha quente', desc: 'Barba feita com toalha quente.', price: 3500, duration: 35 },
   { id: 'barba-pigmentacao', cat: 'barba', name: 'Barba com pigmentação', desc: 'Barba com pigmentação dos fios, realçando os pelos.', price: 4000, duration: 40 },
 
-  { id: 'corte-barba', cat: 'combos', name: 'Corte + barba', desc: 'Corte na máquina e barba com shaving e navalha.', price: 6500, duration: 45, popular: true },
-  { id: 'corte-sobrancelha', cat: 'combos', name: 'Corte + sobrancelha', desc: 'Corte na máquina e sobrancelha na navalha.', price: 4500, duration: 35, popular: true },
-  { id: 'corte-barba-sobrancelha', cat: 'combos', name: 'Corte + barba + sobrancelha', desc: 'O combo completo.', price: 7000, duration: 50 },
-  { id: 'corte-barba-toalha', cat: 'combos', name: 'Corte + barba na toalha', desc: 'Corte na máquina e barba com toalha quente.', price: 7500, duration: 50 },
-  { id: 'combo-premium', cat: 'combos', name: 'Corte + barba toalha + sobrancelha', desc: 'Experiência completa com toalha quente.', price: 8000, duration: 75 },
+  { id: 'corte-barba', includes: ['corte', 'barba'], cat: 'combos', name: 'Corte + barba', desc: 'Corte na máquina e barba com shaving e navalha.', price: 6500, duration: 45, popular: true },
+  { id: 'corte-sobrancelha', includes: ['corte', 'sobrancelha'], cat: 'combos', name: 'Corte + sobrancelha', desc: 'Corte na máquina e sobrancelha na navalha.', price: 4500, duration: 35, popular: true },
+  { id: 'corte-barba-sobrancelha', includes: ['corte', 'barba', 'sobrancelha'], cat: 'combos', name: 'Corte + barba + sobrancelha', desc: 'O combo completo.', price: 7000, duration: 50 },
+  { id: 'corte-barba-toalha', includes: ['corte', 'barba-toalha'], cat: 'combos', name: 'Corte + barba na toalha', desc: 'Corte na máquina e barba com toalha quente.', price: 7500, duration: 50 },
+  { id: 'combo-premium', includes: ['corte', 'barba-toalha', 'sobrancelha'], cat: 'combos', name: 'Corte + barba toalha + sobrancelha', desc: 'Experiência completa com toalha quente.', price: 8000, duration: 75 },
 
   { id: 'progressiva', cat: 'quimica', name: 'Progressiva', desc: 'Alisamento definitivo de qualquer estrutura de cabelo.', price: 6500, duration: 30 },
   { id: 'botox', cat: 'quimica', name: 'Botox', desc: 'Alisa e trata, repondo massa e rejuvenescendo os fios.', price: 5000, duration: 30 },
