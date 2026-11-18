@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { all, run } from '../db.js';
 import { ah, requireAuth } from '../auth.js';
 import { vapidKeys, saveSubscription, removeSubscription, notifyUser } from '../push.js';
-import { serialize } from './booking.js';
+import { serializeAll } from './booking.js';
 import { nowLocal } from '../time.js';
 
 export const pushRouter = Router();
@@ -41,8 +41,9 @@ pushRouter.get('/cron/reminders', ah(async (req, res) => {
     [today]
   );
   let sent = 0;
-  for (const row of rows) {
-    const a = serialize(row);
+  const list = await serializeAll(rows);
+  for (const [i, row] of rows.entries()) {
+    const a = list[i];
     sent += await notifyUser(row.user_id, {
       title: `Hoje é dia! ${a.start} na Oliver's`,
       body: `${a.service.name} com ${a.barber.name}. Até mais tarde! ✂️`,

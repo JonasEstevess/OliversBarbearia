@@ -35,6 +35,9 @@
         <button role="tab" data-tab="agenda" aria-selected="true">Agenda</button>
         <button role="tab" data-tab="bloqueios" aria-selected="false">Bloqueios</button>
         <button role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
+        <button role="tab" data-tab="perfil" aria-selected="false">Meu perfil</button>
+        <button role="tab" data-tab="equipe" aria-selected="false" data-owner-only>Equipe</button>
+        <button role="tab" data-tab="barbearia" aria-selected="false" data-owner-only>Barbearia</button>
       </div>
     </div>
 
@@ -52,7 +55,7 @@
           <button data-shift="1" aria-label="Próximo dia">→</button>
         </div>
         <button class="btn btn--ghost btn--sm" data-today>Hoje</button>
-        <select class="input" data-barber aria-label="Barbeiro"><option value="">Todos os barbeiros</option></select>
+        <select class="input" data-barber aria-label="Barbeiro" data-owner-only><option value="">Todos os barbeiros</option></select>
       </div>
       <p class="day-label" data-day-label></p>
       <div class="kpis">
@@ -71,7 +74,7 @@
         <h2 class="block-form__title">Bloquear horário</h2>
         <p class="muted" style="margin:0 0 6px;font-size:14px">Folga, feriado, médico, curso… Os horários bloqueados somem da agenda online.</p>
         <div class="grid-2">
-          <div class="field"><label for="b-barber">Quem</label>
+          <div class="field" data-owner-only><label for="b-barber">Quem</label>
             <select class="input" id="b-barber" name="barberId"><option value="">Barbearia inteira</option></select></div>
           <div class="field"><label for="b-reason">Motivo (opcional)</label>
             <input class="input" id="b-reason" name="reason" maxlength="120" placeholder="Ex.: Feriado, folga, médico"></div>
@@ -88,6 +91,52 @@
       </form>
       <h2 class="list-title">Próximos bloqueios</h2>
       <div class="timeline" data-blocks></div>
+    </section>
+
+    <!-- MEU PERFIL -->
+    <section data-panel="perfil" hidden>
+      <div data-profile></div>
+    </section>
+
+    <!-- EQUIPE (dono) -->
+    <section data-panel="equipe" hidden>
+      <form class="card block-form" data-add-barber novalidate>
+        <h2 class="block-form__title">Adicionar barbeiro</h2>
+        <p class="muted" style="margin:0;font-size:14px">Crie o perfil e mande o convite pelo WhatsApp. Ele cria a própria senha e já entra no painel com a agenda dele.</p>
+        <div class="grid-2">
+          <div class="field"><label for="nb-name">Nome</label><input class="input" id="nb-name" name="name" maxlength="60" required placeholder="Ex.: Marcos Lima"></div>
+          <div class="field"><label for="nb-phone">WhatsApp (para enviar o convite)</label><input class="input" id="nb-phone" name="phone" type="tel" inputmode="tel" placeholder="(11) 90000-0000"></div>
+        </div>
+        <p class="form-error" aria-live="polite"></p>
+        <button class="btn" type="submit">Criar e enviar convite <span class="arrow">→</span></button>
+      </form>
+      <h2 class="list-title">Barbeiros</h2>
+      <div class="team-grid" data-team></div>
+      <h2 class="list-title">Donos</h2>
+      <div class="timeline" data-owners></div>
+      <form class="card block-form" data-promote novalidate style="margin-top:16px">
+        <h2 class="block-form__title" style="font-size:24px">Dar acesso a uma conta existente</h2>
+        <p class="muted" style="margin:0;font-size:14px">A pessoa já tem cadastro no site? Digite o e-mail dela.</p>
+        <div class="grid-2">
+          <div class="field"><label for="pr-email">E-mail da conta</label><input class="input" id="pr-email" name="email" type="email" required></div>
+          <div class="field"><label for="pr-role">Cargo</label><select class="input" id="pr-role" name="staffRole"><option value="barber">Barbeiro (só a própria agenda)</option><option value="owner">Dono (acesso total)</option></select></div>
+        </div>
+        <p class="form-error" aria-live="polite"></p>
+        <button class="btn btn--ghost" type="submit">Dar acesso</button>
+      </form>
+    </section>
+
+    <!-- BARBEARIA (dono) -->
+    <section data-panel="barbearia" hidden>
+      <div class="card">
+        <h2 class="block-form__title">Horário de funcionamento</h2>
+        <p class="muted" style="font-size:14px;margin:4px 0 16px">Vale para todos os barbeiros que não tiverem horário próprio. Use vírgula para intervalos, ex.: <code style="color:var(--gold-2)">09:00-14:00, 15:00-20:00</code></p>
+        <div data-shop-hours></div>
+        <button class="btn" data-save-hours style="margin-top:14px">Salvar horário</button>
+      </div>
+      <h2 class="list-title">Serviços e preços</h2>
+      <div class="services-admin" data-services></div>
+      <button class="btn btn--ghost" data-new-service style="margin-top:12px">+ Novo serviço</button>
     </section>
 
     <!-- CLIENTES -->

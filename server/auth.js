@@ -56,13 +56,17 @@ export const loadUser = ah(async (req, _res, next) => {
   const token = readCookie(req);
   if (token) {
     const row = await get(
-      `SELECT u.id, u.name, u.email, u.phone, u.role, s.expires_at
+      `SELECT u.id, u.name, u.email, u.phone, u.role, u.staff_role, b.id AS barber_id, s.expires_at
          FROM sessions s JOIN users u ON u.id = s.user_id
+         LEFT JOIN barbers b ON b.user_id = u.id
         WHERE s.token_hash = ?`,
       [sha(token)]
     );
     if (row && row.expires_at > Date.now()) {
-      const { expires_at, ...user } = row;
+      const { expires_at, staff_role, barber_id, ...user } = row;
+      // staffRole: 'owner' (dono, acesso total) | 'barber' (só a própria agenda) | null (cliente)
+      user.staffRole = user.role === 'admin' ? staff_role || 'owner' : null;
+      user.barberId = barber_id || null;
       req.user = user;
     }
   }
@@ -74,9 +78,24 @@ export function requireAuth(req, res, next) {
   next();
 }
 
+// Equipe (dono ou barbeiro).
 export function requireAdmin(req, res, next) {
   if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Acesso restrito.' });
   next();
+}
+export const requireStaff = requireAdmin;
+
+// Só o dono.
+export function requireOwner(req, res, next) {
+  if (!req.user || req.user.staffRole !== 'owner') return res.status(403).json({ error: 'Só o dono da barbearia pode fazer isso.' });
+  next();
+}
+
+export const isOwner = (user) => user?.staffRole === 'owner';
+
+// Dono pode tudo; barbeiro só o que é do próprio perfil.
+export function canManageBarber(user, barberId) {
+  return isOwner(user) || (user?.staffRole === 'barber' && !!barberId && user.barberId === barberId);
 }
 
 // Limite simples de tentativas por IP (por instância do servidor).
@@ -99,7 +118,7 @@ export async function seedAdmin() {
   const password = process.env.ADMIN_PASSWORD;
   if (!email || !password) return;
   if (await get('SELECT id FROM users WHERE email = ?', [email])) return;
-  await run("INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'admin')", [
+  await run("INSERT INTO users (name, email, phone, password_hash, role, staff_role) VALUES (?, ?, ?, ?, 'admin', 'owner')", [
     'Administrador',
     email,
     '',
@@ -147,3 +166,19 @@ export async function consumeResetToken(token) {
   await run('DELETE FROM reset_tokens WHERE token_hash = ?', [row.token_hash]);
   return row.user_id;
 }
+
+// ---------- convites para novos barbeiros ----------
+const INVITE_DAYS = 7;
+export async function createInvite(barberId) {
+  const token = randomBytes(24).toString('base64url');
+  await run('DELETE FROM invites WHERE barber_id = ? OR expires_at < ?', [barberId, Date.now()]);
+  await run('INSERT INTO invites (token_hash, barber_id, expires_at) VALUES (?, ?, ?)', [sha(token), barberId, Date.now() + INVITE_DAYS * 864e5]);
+  return { token, days: INVITE_DAYS };
+}
+
+export async function findInvite(token) {
+  const row = await get('SELECT * FROM invites WHERE token_hash = ?', [sha(String(token || ''))]);
+  return row && row.expires_at > Date.now() ? row : null;
+}
+
+export const deleteInvite = (token) => run('DELETE FROM invites WHERE token_hash = ?', [sha(String(token || ''))]);

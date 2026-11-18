@@ -1,5 +1,6 @@
 import { all } from './db.js';
-import { openingHours, barbers, SLOT_STEP_MIN, BOOKING_WINDOW_DAYS } from './catalog.js';
+import { SLOT_STEP_MIN, BOOKING_WINDOW_DAYS } from './catalog.js';
+import { listBarbers, getOpeningHours } from './store.js';
 import { nowLocal, toMin, weekday, addDays } from './time.js';
 
 const LEAD_MIN = 30; // antecedência mínima para agendar no mesmo dia
@@ -24,12 +25,11 @@ async function busyByBarber(date, ids, ex) {
   return map;
 }
 
-function computeFree(date, duration, busy) {
-  const blocks = openingHours[weekday(date)] || [];
+function computeFree(date, duration, busy, intervals) {
   const now = nowLocal();
   const minStart = date === now.date ? now.minute + LEAD_MIN : 0;
   const out = [];
-  for (const [open, close] of blocks) {
+  for (const [open, close] of intervals) {
     const end = toMin(close);
     for (let s = toMin(open); s + duration <= end; s += SLOT_STEP_MIN) {
       if (s < minStart) continue;
@@ -41,16 +41,29 @@ function computeFree(date, duration, busy) {
   return out;
 }
 
-// Horários livres (em minutos) de cada barbeiro pedido, numa única consulta.
+// Horário de trabalho do barbeiro naquele dia: o próprio, ou o da barbearia.
+const workIntervals = (barber, shopHours, wd) => (barber.hours ? barber.hours[wd] : shopHours[wd]) || [];
+
+// Horários livres (em minutos) de cada barbeiro ativo pedido.
 export async function freeSlotsByBarber(ids, date, duration, ex) {
-  if (!isBookableDate(date)) return Object.fromEntries(ids.map((id) => [id, []]));
-  const busy = await busyByBarber(date, ids, ex);
-  return Object.fromEntries(ids.map((id) => [id, computeFree(date, duration, busy[id])]));
+  const empty = Object.fromEntries(ids.map((id) => [id, []]));
+  if (!isBookableDate(date)) return empty;
+  const [barbers, shopHours] = await Promise.all([listBarbers({}, ex), getOpeningHours()]);
+  const active = new Map(barbers.map((b) => [b.id, b]));
+  const valid = ids.filter((id) => active.has(id));
+  const busy = await busyByBarber(date, valid, ex);
+  const wd = weekday(date);
+  for (const id of valid) empty[id] = computeFree(date, duration, busy[id], workIntervals(active.get(id), shopHours, wd));
+  return empty;
+}
+
+export async function activeBarberIds(ex) {
+  return (await listBarbers({}, ex)).map((b) => b.id);
 }
 
 // Para "qualquer barbeiro": união dos horários, com o barbeiro livre de cada horário.
 export async function slotsFor(barberId, date, duration) {
-  const ids = barberId === 'any' ? barbers.map((b) => b.id) : [barberId];
+  const ids = barberId === 'any' ? await activeBarberIds() : [barberId];
   const free = await freeSlotsByBarber(ids, date, duration);
   const map = new Map();
   for (const id of ids) for (const s of free[id]) if (!map.has(s)) map.set(s, id);
