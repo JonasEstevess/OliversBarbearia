@@ -112,8 +112,9 @@ function buildAuthModal() {
       <button class="btn btn--block" type="submit"><span data-submit>Entrar</span> <span class="arrow">→</span></button>
       <button class="link forgot" type="button" data-only="login" data-forgot>Esqueci minha senha</button>
       <div class="forgot-box" hidden data-forgot-box>
-        <p>Sem problema! Chame a barbearia no WhatsApp e peça um <b>link para criar uma senha nova</b>. Leva 1 minuto.</p>
-        <a class="btn btn--ghost btn--block" target="_blank" rel="noopener" data-forgot-wa>Pedir link no WhatsApp</a>
+        <p data-forgot-msg>Digite seu e-mail acima e toque no botão. Vamos mandar um <b>link para criar uma senha nova</b>.</p>
+        <button class="btn btn--block" type="button" data-forgot-send>Enviar link para meu e-mail</button>
+        <a class="link" target="_blank" rel="noopener" data-forgot-wa hidden style="text-align:center;font-size:13px">Não recebeu? Fale com a barbearia</a>
       </div>
     </form>`;
   document.body.append(el);
@@ -150,9 +151,33 @@ function buildAuthModal() {
   el.querySelectorAll('[role=tab]').forEach((t) => t.addEventListener('click', () => setMode(t.dataset.mode)));
   el.querySelector('.modal__close').addEventListener('click', () => close(null));
   el.querySelector('[data-forgot]').addEventListener('click', () => {
-    const email = el.querySelector('#a-email').value.trim();
-    el.querySelector('[data-forgot-wa]').href = waLink(SHOP_WHATSAPP, `Olá! Esqueci minha senha do site da Oliver's. Pode me mandar um link para criar uma nova?${email ? ` Meu e-mail é ${email}.` : ''}`);
     el.querySelector('[data-forgot-box]').hidden = false;
+    el.querySelector('[data-forgot-msg]').innerHTML = 'Confira seu e-mail acima e toque no botão. Vamos mandar um <b>link para criar uma senha nova</b>.';
+    el.querySelector('[data-forgot-send]').hidden = false;
+    el.querySelector('[data-forgot-wa]').hidden = true;
+    el.querySelector('#a-email').focus();
+  });
+  el.querySelector('[data-forgot-send]').addEventListener('click', async (e) => {
+    const email = el.querySelector('#a-email').value.trim();
+    const msg = el.querySelector('[data-forgot-msg]');
+    const wa = el.querySelector('[data-forgot-wa]');
+    wa.href = waLink(SHOP_WHATSAPP, `Olá! Não estou conseguindo entrar no site da Oliver's.${email ? ` Meu e-mail é ${email}.` : ''}`);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { err.textContent = 'Digite o e-mail da sua conta.'; el.querySelector('#a-email').focus(); return; }
+    err.textContent = '';
+    e.target.disabled = true;
+    e.target.textContent = 'Enviando…';
+    try {
+      await api('/auth/forgot', { method: 'POST', body: { email } });
+      msg.innerHTML = `Pronto! Se existir uma conta com <b>${esc(email)}</b>, enviamos um link para criar uma senha nova. Ele vale por 1 hora. <b>Confira também a caixa de spam.</b>`;
+      e.target.hidden = true;
+      wa.hidden = false;
+    } catch (ex) {
+      msg.textContent = ex.message;
+      wa.hidden = false;
+    } finally {
+      e.target.disabled = false;
+      e.target.textContent = 'Enviar link para meu e-mail';
+    }
   });
 
   form.addEventListener('submit', async (e) => {
