@@ -1,8 +1,8 @@
 // Service worker: site abre rápido e funciona com internet instável.
 // API nunca é cacheada (horários precisam estar sempre atualizados).
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `olivers-${VERSION}`;
-const CORE = ['/m/', '/m/app.css?v=2', '/m/app.js?v=2', '/js/pricing.js', '/', '/conta', '/css/base.css', '/css/home.css', '/css/booking.css', '/css/account.css',
+const CORE = ['/m/', '/m/app.css?v=3', '/m/app.js?v=3', '/js/pricing.js', '/', '/conta', '/css/base.css', '/css/home.css', '/css/booking.css', '/css/account.css',
   '/js/core.js', '/js/home.js', '/js/booking.js', '/js/account.js', '/img/logo.jpg?v=3', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {

@@ -45,7 +45,12 @@ function sheet(html, bind) {
   return new Promise((resolve) => {
     const el = $('[data-sheet]');
     const bd = $('[data-sheet-backdrop]');
-    el.innerHTML = html;
+    // Conteúdo num container novo a cada abertura: eventos de folhas anteriores não se acumulam.
+    el.innerHTML = '';
+    const inner = document.createElement('div');
+    inner.innerHTML = html;
+    el.append(inner);
+    el.scrollTop = 0;
     const close = (val) => {
       el.classList.remove('is-open');
       bd.classList.remove('is-open');
@@ -55,7 +60,7 @@ function sheet(html, bind) {
     bd.onclick = () => close(null);
     el.onclick = (e) => { const b = e.target.closest('[data-close]'); if (b) close(b.dataset.close || null); };
     requestAnimationFrame(() => { el.classList.add('is-open'); bd.classList.add('is-open'); });
-    bind?.(el, close);
+    bind?.(inner, close);
   });
 }
 const confirmSheet = (title, text, ok = 'Confirmar', danger = false) =>
@@ -75,19 +80,45 @@ let lastStep = 0;
 
 async function render() {
   const { tab, sub, q } = parseRoute();
-  const name = ['inicio', 'agendar', 'horarios', 'conta'].includes(tab) ? tab : 'inicio';
+  let name = ['inicio', 'agendar', 'horarios', 'conta', 'painel'].includes(tab) ? tab : 'inicio';
+  if (name === 'painel' && session.user?.role !== 'admin') name = 'conta';
+  syncTabbar();
   $$('[data-screen]').forEach((s) => s.classList.toggle('is-active', s.dataset.screen === name));
   $$('.tabbar a').forEach((a) => a.classList.toggle('is-active', a.dataset.tab === name));
   $('.actionbar')?.remove();
+  $('.fab')?.remove();
   const screen = $(`[data-screen="${name}"]`);
   screen.classList.remove('has-bar');
   if (name === 'inicio') renderHome(screen);
   if (name === 'agendar') renderBooking(screen, sub, q);
   if (name === 'horarios') renderAppts(screen);
   if (name === 'conta') renderAccount(screen);
-  if (name !== 'agendar' || !sub) window.scrollTo(0, 0);
+  if (name === 'painel') {
+    // Painel da equipe: carregado só para quem é da equipe.
+    const { renderPanel } = await import('/m/painel.js?v=1');
+    renderPanel(screen, sub, q, { sheet, confirmSheet, I, tap, photo, ini, go, cat, refreshCatalog });
+  }
+  if ((name !== 'agendar' || !sub) && name !== 'painel') window.scrollTo(0, 0);
 }
 addEventListener('hashchange', render);
+
+// Equipe: a aba "Horários" vira "Painel".
+function syncTabbar() {
+  const staff = session.user?.role === 'admin';
+  const a = $('.tabbar a[data-tab="horarios"], .tabbar a[data-tab="painel"]');
+  if (!a || (a.dataset.tab === 'painel') === staff) return;
+  a.dataset.tab = staff ? 'painel' : 'horarios';
+  a.href = staff ? '#/painel' : '#/horarios';
+  a.innerHTML = staff
+    ? `${I.grid}<span>Painel</span>`
+    : '<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><span>Horários</span>';
+}
+
+// Recarrega serviços/barbeiros depois que o painel muda algo (foto, preço...).
+async function refreshCatalog() {
+  try { cat = await api('/catalog'); } catch { /* mantém o anterior */ }
+  return cat;
+}
 
 // =====================================================================
 // INÍCIO
@@ -609,7 +640,7 @@ async function renderAccount(el) {
   const staff = user.role === 'admin';
   el.innerHTML = `<header class="appbar"><span class="appbar__title">Conta</span></header>
     <div class="profile"><span class="photo">${ini(user.name)}</span><div><strong>${esc(user.name)}</strong><small>${esc(user.email)}${user.phone ? ` · ${esc(maskPhone(user.phone))}` : ''}</small></div></div>
-    ${staff ? `<div class="list" style="margin-bottom:14px"><a class="row" href="/painel"><span class="row__icon">${I.grid}</span><span class="row__body"><strong>Painel da equipe</strong><small>${user.staffRole === 'owner' ? 'Agenda, equipe, serviços e preços' : 'Sua agenda, bloqueios e perfil'}</small></span><span class="row__end">${I.chev}</span></a></div>` : ''}
+    ${staff ? `<div class="list" style="margin-bottom:14px"><a class="row" href="#/painel"><span class="row__icon">${I.grid}</span><span class="row__body"><strong>Painel da equipe</strong><small>${user.staffRole === 'owner' ? 'Agenda, equipe, serviços e preços' : 'Sua agenda, bloqueios e perfil'}</small></span><span class="row__end">${I.chev}</span></a></div>` : ''}
     <div class="list">
       <div class="row"><span class="row__icon">${I.bell}</span><span class="row__body"><strong>${staff ? 'Avisos de agendamento' : 'Lembretes'}</strong><small data-push-hint>${staff ? 'Notificação a cada novo agendamento' : 'Aviso no dia do seu horário'}</small></span><button class="switch" role="switch" aria-checked="false" data-push aria-label="Notificações"></button></div>
       <a class="row" target="_blank" rel="noopener" href="${waLink(SHOP_WHATSAPP, 'Olá! Vim pelo app da Oliver\'s.')}"><span class="row__icon">${I.wa}</span><span class="row__body"><strong>Falar com a barbearia</strong><small>WhatsApp</small></span><span class="row__end">${I.chev}</span></a>
@@ -671,7 +702,7 @@ async function renderAccount(el) {
     document.body.innerHTML = `<div class="empty" style="margin-top:40vh"><strong>Sem conexão</strong>Verifique a internet e tente de novo.<br><button class="btn btn--sm" onclick="location.reload()">Tentar de novo</button></div>`;
     return;
   }
-  session.onChange(() => { myAppts = null; });
+  session.onChange(() => { myAppts = null; syncTabbar(); });
   render();
   setTimeout(() => $('[data-splash]').classList.add('is-gone'), 150);
   if ('serviceWorker' in navigator && location.hostname !== 'localhost') navigator.serviceWorker.register('/sw.js').catch(() => {});
