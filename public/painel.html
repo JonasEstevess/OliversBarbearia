@@ -2,6 +2,18 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
+  <script>
+    // No celular (ou dentro do app), usa o painel feito para mobile.
+    (function () {
+      var phone = /Android|iPhone|iPod|Mobile/i.test(navigator.userAgent) || matchMedia('(max-width: 760px)').matches;
+      if (phone || matchMedia('(display-mode: standalone)').matches) {
+        var q = new URLSearchParams(location.search);
+        var tab = { bloqueios: 1, clientes: 1, perfil: 1, equipe: 1, barbearia: 1 }[q.get('tab')] ? q.get('tab') : 'agenda';
+        window.__toMobilePanel = true; // o painel de computador não deve rodar (ele cancelaria o redirecionamento)
+        location.replace('/m/#/painel/' + tab + (q.get('date') ? '?date=' + q.get('date') : ''));
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Painel — Oliver's Barbearia</title>
   <meta name="theme-color" content="#0b0a08">

@@ -3,6 +3,9 @@ import {
   pushStatus, enablePush, disablePush,
 } from './core.js';
 
+// No celular a página redireciona para o painel do app: não roda nada aqui (senão cancela o redirecionamento).
+if (window.__toMobilePanel) await new Promise(() => {});
+
 document.querySelectorAll('[data-img]').forEach((img) => (img.src = IMG[img.dataset.img]));
 initNav();
 
