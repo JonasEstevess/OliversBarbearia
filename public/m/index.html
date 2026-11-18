@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Oliver's Barbearia</title>
+  <meta name="description" content="Agende seu corte na Oliver's Barbearia em segundos.">
+  <meta name="theme-color" content="#0b0a08">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Oliver's">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/m/app.css?v=2">
+</head>
+<body>
+  <div class="splash" data-splash aria-hidden="true"><img src="/icons/icon-192.png?v=3" alt=""></div>
+
+  <main class="screens" data-screens>
+    <section class="screen" data-screen="inicio" aria-label="Início"></section>
+    <section class="screen" data-screen="agendar" aria-label="Agendar"></section>
+    <section class="screen" data-screen="horarios" aria-label="Meus horários"></section>
+    <section class="screen" data-screen="conta" aria-label="Conta"></section>
+  </main>
+
+  <nav class="tabbar" aria-label="Navegação">
+    <a href="#/" data-tab="inicio">
+      <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span>
+    </a>
+    <a href="#/agendar" data-tab="agendar" class="tabbar__main">
+      <span class="tabbar__fab"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg></span><span>Agendar</span>
+    </a>
+    <a href="#/horarios" data-tab="horarios">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><span>Horários</span>
+    </a>
+    <a href="#/conta" data-tab="conta">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Conta</span>
+    </a>
+  </nav>
+
+  <div class="sheet-backdrop" data-sheet-backdrop></div>
+  <div class="sheet" data-sheet role="dialog" aria-modal="true"></div>
+
+  <script type="module" src="/m/app.js?v=2"></script>
+</body>
+</html>
