@@ -31,7 +31,17 @@ session.load();
 // botões de agendar
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-book]');
-  if (b) { e.preventDefault(); openBooking({ serviceId: b.dataset.service, barberId: b.dataset.barber }); }
+  if (!b) return;
+  e.preventDefault();
+  // No celular, o agendamento acontece no app mobile (experiência feita para toque).
+  if (matchMedia('(max-width: 760px)').matches) {
+    const q = new URLSearchParams();
+    if (b.dataset.service) q.set('s', b.dataset.service);
+    if (b.dataset.barber && b.dataset.barber !== 'any') q.set('b', b.dataset.barber);
+    location.href = `/m/#/agendar${q.size ? `?${q}` : ''}`;
+    return;
+  }
+  openBooking({ serviceId: b.dataset.service, barberId: b.dataset.barber });
 });
 
 const { shop, services, barbers, categories, openingHours, today } = await api('/catalog');

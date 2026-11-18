@@ -6,6 +6,7 @@ import {
   openingHours as defaultHours, BOOKING_WINDOW_DAYS,
 } from './catalog.js';
 import { nowLocal } from './time.js';
+import { resolveSelection } from '../public/js/pricing.js';
 
 export async function seedCatalog() {
   if (!(await get('SELECT 1 AS x FROM barbers LIMIT 1'))) {
@@ -15,8 +16,8 @@ export async function seedCatalog() {
   if (!(await get('SELECT 1 AS x FROM services LIMIT 1'))) {
     for (const [i, s] of defaultServices.entries())
       await run(
-        'INSERT INTO services (id, cat, name, description, price, duration, popular, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [s.id, s.cat, s.name, s.desc || '', s.price, s.duration, s.popular ? 1 : 0, i]
+        'INSERT INTO services (id, cat, name, description, price, duration, popular, sort, includes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [s.id, s.cat, s.name, s.desc || '', s.price, s.duration, s.popular ? 1 : 0, i, s.includes ? JSON.stringify(s.includes) : null]
       );
   }
   if (!(await getSetting('opening_hours'))) await setSetting('opening_hours', JSON.stringify(defaultHours));
@@ -69,6 +70,7 @@ export function mapService(s) {
   return {
     id: s.id, cat: s.cat, name: s.name, desc: s.description || '', price: s.price,
     duration: s.duration, popular: !!s.popular, active: !!s.active,
+    includes: s.includes ? JSON.parse(s.includes) : null,
   };
 }
 
@@ -108,6 +110,15 @@ export async function publicCatalog() {
 export async function nameMaps() {
   const [b, s] = await Promise.all([all('SELECT id, name FROM barbers'), all('SELECT id, name, duration FROM services')]);
   return { barbers: new Map(b.map((x) => [x.id, x])), services: new Map(s.map((x) => [x.id, x])) };
+}
+
+// Resolve a seleção de serviços (vários ids) com preço de combo automático.
+export async function quote(ids) {
+  const list = (Array.isArray(ids) ? ids : String(ids || '').split(','))
+    .map((x) => String(x).trim()).filter(Boolean).slice(0, 6);
+  if (!list.length) return null;
+  const r = resolveSelection(list, await listServices());
+  return r.items.length ? r : null;
 }
 
 export function slugify(text) {

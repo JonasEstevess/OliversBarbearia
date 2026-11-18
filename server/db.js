@@ -123,11 +123,20 @@ const MIGRATIONS = [
   'ALTER TABLE users ADD COLUMN accepted_terms_at TEXT',
   // role = 'admin' significa "equipe"; staff_role diz se é dono (tudo) ou barbeiro (só o próprio).
   'ALTER TABLE users ADD COLUMN staff_role TEXT',
+  // Combos: lista dos serviços que o combo substitui (preço de combo automático).
+  'ALTER TABLE services ADD COLUMN includes TEXT',
+  // Agendamento com vários serviços: retrato dos itens no momento da reserva.
+  'ALTER TABLE appointments ADD COLUMN items TEXT',
 ];
 
 // Ajustes de dados idempotentes, rodados a cada inicialização.
 const DATA_FIXES = [
   "UPDATE users SET staff_role = 'owner' WHERE role = 'admin' AND staff_role IS NULL",
+  `UPDATE services SET includes = '["corte", "barba"]' WHERE id = 'corte-barba' AND includes IS NULL`,
+  `UPDATE services SET includes = '["corte", "sobrancelha"]' WHERE id = 'corte-sobrancelha' AND includes IS NULL`,
+  `UPDATE services SET includes = '["corte", "barba", "sobrancelha"]' WHERE id = 'corte-barba-sobrancelha' AND includes IS NULL`,
+  `UPDATE services SET includes = '["corte", "barba-toalha"]' WHERE id = 'corte-barba-toalha' AND includes IS NULL`,
+  `UPDATE services SET includes = '["corte", "barba-toalha", "sobrancelha"]' WHERE id = 'combo-premium' AND includes IS NULL`,
 ];
 
 let ready;

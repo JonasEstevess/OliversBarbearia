@@ -3,7 +3,7 @@ import { all, get, run, tx } from '../db.js';
 import { ah, requireAuth } from '../auth.js';
 import { CANCEL_MIN_HOURS } from '../catalog.js';
 import { slotsFor, freeSlotsByBarber, isBookableDate, activeBarberIds } from '../availability.js';
-import { publicCatalog, getService, getBarber, nameMaps } from '../store.js';
+import { publicCatalog, getBarber, nameMaps, quote } from '../store.js';
 import { isDate, nowLocal, toHHMM } from '../time.js';
 import { notifyStaff } from '../push.js';
 
@@ -18,6 +18,10 @@ export const bookingRouter = Router();
 export function serialize(a, maps) {
   const s = maps.services.get(a.service_id);
   const b = maps.barbers.get(a.barber_id);
+  const items = a.items ? JSON.parse(a.items) : null;
+  const service = items?.length
+    ? { id: items[0].id, name: items.map((i) => i.name).join(' + '), duration: a.end_min - a.start_min }
+    : s ? { id: s.id, name: s.name, duration: s.duration } : { id: a.service_id, name: a.service_id };
   return {
     id: a.id,
     date: a.date,
@@ -26,7 +30,8 @@ export function serialize(a, maps) {
     status: a.status,
     price: a.price,
     notes: a.notes || null,
-    service: s ? { id: s.id, name: s.name, duration: s.duration } : { id: a.service_id, name: a.service_id },
+    service,
+    items: items || (s ? [{ id: s.id, name: s.name, price: a.price, duration: s.duration }] : []),
     barber: b ? { id: b.id, name: b.name } : { id: a.barber_id, name: a.barber_id },
     client: a.client_name ? { name: a.client_name, phone: a.client_phone, email: a.client_email } : undefined,
   };
@@ -43,9 +48,9 @@ bookingRouter.get('/catalog', ah(async (_req, res) => {
 }));
 
 bookingRouter.get('/availability', ah(async (req, res) => {
-  const { date, service, barber = 'any' } = req.query;
-  const s = await getService(service);
-  if (!s?.active) return res.status(400).json({ error: 'Serviço inválido.' });
+  const { date, barber = 'any' } = req.query;
+  const s = await quote(req.query.services || req.query.service);
+  if (!s) return res.status(400).json({ error: 'Serviço inválido.' });
   if (!isDate(date)) return res.status(400).json({ error: 'Data inválida.' });
   if (barber !== 'any' && !(await getBarber(barber))?.active) return res.status(400).json({ error: 'Barbeiro inválido.' });
   const slots = (await slotsFor(barber, date, s.duration)).map((x) => ({ time: toHHMM(x.start), barber: x.barber }));
@@ -58,9 +63,10 @@ bookingRouter.get('/appointments', requireAuth, ah(async (req, res) => {
 }));
 
 bookingRouter.post('/appointments', requireAuth, ah(async (req, res) => {
-  const { serviceId, barberId = 'any', date, time, notes } = req.body || {};
-  const s = await getService(serviceId);
-  if (!s?.active) return res.status(400).json({ error: 'Escolha um serviço.' });
+  const { serviceId, serviceIds, barberId = 'any', date, time, notes } = req.body || {};
+  // Aceita um serviço (site) ou vários (app). Combos são aplicados automaticamente.
+  const s = await quote(Array.isArray(serviceIds) && serviceIds.length ? serviceIds : [serviceId]);
+  if (!s) return res.status(400).json({ error: 'Escolha pelo menos um serviço.' });
   if (!isDate(date) || !isBookableDate(date)) return res.status(400).json({ error: 'Data indisponível.' });
   if (!/^\d{2}:\d{2}$/.test(time || '')) return res.status(400).json({ error: 'Horário inválido.' });
   if (barberId !== 'any' && !(await getBarber(barberId))?.active) return res.status(400).json({ error: 'Barbeiro inválido.' });
@@ -76,8 +82,8 @@ bookingRouter.post('/appointments', requireAuth, ah(async (req, res) => {
       const chosen = candidates.find((id) => free[id].includes(start));
       if (!chosen) throw Object.assign(new Error('Esse horário acabou de ser reservado. Escolha outro.'), { status: 409 });
       const { lastInsertRowid } = await run(
-        'INSERT INTO appointments (user_id, barber_id, service_id, date, start_min, end_min, price, notes) VALUES (?,?,?,?,?,?,?,?)',
-        [req.user.id, chosen, s.id, date, start, start + s.duration, s.price, notes ? String(notes).slice(0, 300) : null],
+        'INSERT INTO appointments (user_id, barber_id, service_id, date, start_min, end_min, price, notes, items) VALUES (?,?,?,?,?,?,?,?,?)',
+        [req.user.id, chosen, s.items[0].id, date, start, start + s.duration, s.price, notes ? String(notes).slice(0, 300) : null, JSON.stringify(s.items)],
         t
       );
       return get('SELECT * FROM appointments WHERE id = ?', [lastInsertRowid], t);

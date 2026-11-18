@@ -2,6 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
+  <script>
+    // Aberto pelo app (Android/TWA ou instalado na tela inicial)? Vai direto para o app mobile.
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var app = q.get('source') === 'app' || matchMedia('(display-mode: standalone)').matches || document.referrer.indexOf('android-app://') === 0;
+      if (app) location.replace('/m/' + (location.hash === '#agendar' ? '#/agendar' : ''));
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Oliver's Barbearia — Agende seu horário</title>
   <meta name="description" content="Oliver's Barbearia, Jardim Amália — São Paulo. Especialista em afro desde 2014. Agende corte, barba e sobrancelha online em segundos.">

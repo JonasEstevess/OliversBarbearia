@@ -1,12 +1,13 @@
 // Utilitários compartilhados: API, sessão, formatação, toasts, nav e modal de login.
 
 export const IMG = {
-  logo: '/img/logo.jpg',
-  front: '/img/fachada.jpg',
-  cuts: ['/img/corte-1.jpg', '/img/corte-2.jpg', '/img/corte-3.jpg', '/img/corte-4.jpg', '/img/corte-5.jpg'],
+  // ?v= força os celulares a baixarem a versão nova quando uma foto muda.
+  logo: '/img/logo.jpg?v=3',
+  front: '/img/fachada.jpg?v=3',
+  cuts: [1, 2, 3, 4, 5].map((n) => `/img/corte-${n}.jpg?v=3`),
   space: [
-    { src: '/img/ambiente-cafe.jpg', caption: 'Cafezinho' },
-    { src: '/img/ambiente-petiscos.jpg', caption: 'Petiscos' },
+    { src: '/img/ambiente-cafe.jpg?v=3', caption: 'Cafezinho' },
+    { src: '/img/ambiente-petiscos.jpg?v=3', caption: 'Petiscos' },
   ],
 };
 
