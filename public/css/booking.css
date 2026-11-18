@@ -125,3 +125,15 @@
 .ticket > div { background: var(--ink); padding: 16px 18px; display: grid; gap: 2px; }
 .ticket strong { }
 .done__actions { width: 100%; display: grid; gap: 10px; justify-items: center; }
+
+/* vários serviços: marcador de seleção, etiqueta de combo e economia */
+.booking__hint { margin: -12px 0 20px; font-size: 14px; }
+.opt--multi { align-items: center; justify-content: flex-start; }
+.opt--multi .opt__main { flex: 1; min-width: 0; }
+.opt__check { width: 24px; height: 24px; flex: none; border-radius: 50%; border: 2px solid var(--line-2); display: grid; place-items: center; font-size: 13px; font-weight: 800; color: transparent; transition: all 0.2s var(--ease); }
+.opt.is-on .opt__check { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.opt.is-on .opt__main strong { color: var(--gold-2); }
+.combo-tag { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 6px; background: rgba(212, 169, 76, 0.16); color: var(--gold-2); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; vertical-align: 2px; }
+.booking__summary s { color: var(--muted); font-size: 12px; }
+.saving-tag { color: var(--ok); font-size: 12px; font-weight: 700; }
+.booking__saving { margin: -8px 0 16px; padding: 12px 14px; border-radius: 14px; background: rgba(127, 212, 155, 0.1); color: var(--ok); font-weight: 600; font-size: 14px; }

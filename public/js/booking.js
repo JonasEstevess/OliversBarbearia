@@ -1,21 +1,29 @@
 import { api, session, openAuth, registerLayer, toast, money, duration, esc, fmtDay, parseDate, isoDate, icsFor, waLink, firstName, enablePush, pushStatus } from './core.js';
+import { resolveSelection } from './pricing.js';
 
 let catalog;
 let drawer;
-const STEPS = ['Serviço', 'Profissional', 'Data e hora', 'Confirmar'];
+const STEPS = ['Serviços', 'Profissional', 'Data e hora', 'Confirmar'];
 
-const state = { step: 0, serviceId: null, barberId: null, date: null, time: null, slotBarber: null, notes: '', done: null };
+const state = { step: 0, services: [], barberId: null, date: null, time: null, slotBarber: null, notes: '', done: null };
 
-const svc = () => catalog.services.find((s) => s.id === state.serviceId);
+// Seleção atual com preço de combo aplicado (mesma regra do servidor).
+const svc = () => {
+  if (!state.services.length) return null;
+  const r = resolveSelection(state.services, catalog.services);
+  return r.items.length ? { ...r, name: r.label } : null;
+};
 const barberName = (id) => (id === 'any' ? 'Primeiro disponível' : catalog.barbers.find((b) => b.id === id)?.name || '');
 
-export async function openBooking({ serviceId, barberId } = {}) {
+export async function openBooking({ serviceId, serviceIds, barberId } = {}) {
   catalog ||= await api('/catalog');
   drawer ||= build();
-  Object.assign(state, { step: 0, serviceId: null, barberId: null, date: null, time: null, slotBarber: null, notes: '', done: null });
-  if (serviceId && catalog.services.some((s) => s.id === serviceId)) state.serviceId = serviceId;
+  Object.assign(state, { step: 0, services: [], barberId: null, date: null, time: null, slotBarber: null, notes: '', done: null });
+  const wanted = serviceIds?.length ? serviceIds : serviceId ? [serviceId] : [];
+  state.services = wanted.filter((id) => catalog.services.some((s) => s.id === id));
   if (barberId && (barberId === 'any' || catalog.barbers.some((b) => b.id === barberId))) state.barberId = barberId;
-  state.step = state.serviceId ? (state.barberId ? 2 : 1) : 0;
+  // Começa pelos serviços (dá para somar barba, sobrancelha...) mesmo vindo de um serviço específico.
+  state.step = 0;
   drawer.open();
   render();
 }
@@ -58,7 +66,7 @@ function back() {
 }
 
 async function next() {
-  if (state.step === 0 && state.serviceId) state.step = state.barberId ? 2 : 1;
+  if (state.step === 0 && svc()) state.step = state.barberId ? 2 : 1;
   else if (state.step === 1 && state.barberId) state.step = 2;
   else if (state.step === 2 && state.time) state.step = 3;
   else if (state.step === 3) return confirm();
@@ -70,7 +78,18 @@ function onBodyClick(e) {
   const t = e.target.closest('[data-pick]');
   if (!t) return;
   const { pick, value } = t.dataset;
-  if (pick === 'service') { state.serviceId = value; state.time = null; setTimeout(next, 180); }
+  if (pick === 'service') {
+    // Vários serviços: liga/desliga. Escolher um combo tira os serviços que ele já inclui (e vice-versa).
+    const chosen = catalog.services.find((s) => s.id === value);
+    const had = state.services.includes(value);
+    let list = had ? state.services.filter((x) => x !== value) : [...state.services, value];
+    if (!had) {
+      if (chosen?.includes) list = list.filter((x) => !chosen.includes.includes(x));
+      list = list.filter((x) => !catalog.services.find((y) => y.id === x)?.includes?.includes(value));
+    }
+    state.services = list;
+    state.time = null;
+  }
   if (pick === 'barber') { state.barberId = value; state.time = null; setTimeout(next, 180); }
   if (pick === 'date') { state.date = value; state.time = null; loadSlots(); }
   if (pick === 'time') { state.time = value; state.slotBarber = t.dataset.barber; }
@@ -121,11 +140,11 @@ function renderFoot() {
   if (state.barberId) parts.push(esc(barberName(state.time && state.barberId === 'any' ? state.slotBarber : state.barberId)));
   if (state.time) parts.push(`${fmtDay(state.date, { day: 'numeric', month: 'short' })} · ${state.time}`);
   el.querySelector('[data-summary]').innerHTML = s
-    ? `<div>${parts.join(' <i>•</i> ')}</div><div class="muted">${duration(s.duration)} · <b>${money(s.price)}</b></div>`
-    : '<div class="muted">Escolha um serviço para começar</div>';
+    ? `<div>${parts.join(' <i>•</i> ')}</div><div class="muted">${duration(s.duration)} · <b>${money(s.price)}</b>${s.savings ? ` <s>${money(s.original)}</s> <span class="saving-tag">combo −${money(s.savings)}</span>` : ''}</div>`
+    : '<div class="muted">Escolha um ou mais serviços</div>';
 
   const btn = el.querySelector('[data-next]');
-  const ready = [!!state.serviceId, !!state.barberId, !!state.time, true][state.step];
+  const ready = [!!s, !!state.barberId, !!state.time, true][state.step];
   btn.disabled = !ready;
   btn.innerHTML = state.step === 3
     ? session.user ? 'Confirmar agendamento <span class="arrow">→</span>' : 'Entrar e confirmar <span class="arrow">→</span>'
@@ -133,14 +152,17 @@ function renderFoot() {
 }
 
 function viewServices() {
-  return `<h2 class="booking__title">O que vamos <span class="serif">fazer?</span></h2>` +
+  return `<h2 class="booking__title">O que vamos <span class="serif">fazer?</span></h2>
+    <p class="muted booking__hint">Escolha um ou mais serviços. Se formar um combo, o desconto entra sozinho.</p>` +
     catalog.categories
       .map((c) => {
         const items = catalog.services.filter((s) => s.cat === c.id);
+        if (!items.length) return '';
         return `<h3 class="booking__group">${esc(c.name)}</h3><div class="opt-list">${items
           .map(
-            (s) => `<button class="opt ${state.serviceId === s.id ? 'is-on' : ''}" data-pick="service" data-value="${s.id}" aria-pressed="${state.serviceId === s.id}">
-              <span class="opt__main"><strong>${esc(s.name)}</strong><small class="muted">${esc(s.desc)}</small></span>
+            (s) => `<button class="opt opt--multi ${state.services.includes(s.id) ? 'is-on' : ''}" data-pick="service" data-value="${s.id}" aria-pressed="${state.services.includes(s.id)}">
+              <span class="opt__check" aria-hidden="true">✓</span>
+              <span class="opt__main"><strong>${esc(s.name)}${s.includes ? ' <span class="combo-tag">COMBO</span>' : ''}</strong><small class="muted">${esc(s.desc)}</small></span>
               <span class="opt__meta"><b>${money(s.price)}</b><small class="muted">${duration(s.duration)}</small></span>
             </button>`
           )
@@ -202,7 +224,7 @@ async function loadSlots() {
   box.innerHTML = '<div class="slots__grid">' + '<span class="slot skeleton"></span>'.repeat(12) + '</div>';
   const id = ++slotReq;
   try {
-    const { slots } = await api(`/availability?date=${state.date}&service=${state.serviceId}&barber=${state.barberId}`);
+    const { slots } = await api(`/availability?date=${state.date}&services=${state.services.join(',')}&barber=${state.barberId}`);
     if (id !== slotReq) return;
     if (!slots.length) {
       box.innerHTML = `<div class="slots__empty">Sem horários livres nesse dia.<br><button class="link" data-pick="date" data-value="${nextOpen(state.date)}">Ver próximo dia →</button></div>`;
@@ -226,8 +248,9 @@ function viewReview() {
   const s = svc();
   const who = barberName(state.barberId === 'any' ? state.slotBarber : state.barberId);
   return `<h2 class="booking__title">Tudo <span class="serif">certo?</span></h2>
+    ${s.savings ? `<p class="booking__saving">🏷️ Combo aplicado — você economiza ${money(s.savings)}</p>` : ''}
     <div class="review">
-      <div class="review__row"><span class="muted">Serviço</span><strong>${esc(s.name)}</strong></div>
+      <div class="review__row"><span class="muted">Serviço${s.items.length > 1 ? 's' : ''}</span><strong>${s.items.map((i) => esc(i.name)).join('<br>')}</strong></div>
       <div class="review__row"><span class="muted">Profissional</span><strong>${esc(who)}</strong></div>
       <div class="review__row"><span class="muted">Data</span><strong>${esc(fmtDay(state.date))}</strong></div>
       <div class="review__row"><span class="muted">Horário</span><strong>${state.time} · ${duration(s.duration)}</strong></div>
@@ -254,7 +277,7 @@ async function confirm() {
   try {
     const { appointment } = await api('/appointments', {
       method: 'POST',
-      body: { serviceId: state.serviceId, barberId: state.barberId === 'any' ? state.slotBarber : state.barberId, date: state.date, time: state.time, notes },
+      body: { serviceIds: state.services, barberId: state.barberId === 'any' ? state.slotBarber : state.barberId, date: state.date, time: state.time, notes },
     });
     state.done = appointment;
     render();
