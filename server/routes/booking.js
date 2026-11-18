@@ -4,6 +4,13 @@ import { ah, requireAuth } from '../auth.js';
 import { shop, services, barbers, categories, openingHours, CANCEL_MIN_HOURS, BOOKING_WINDOW_DAYS } from '../catalog.js';
 import { slotsFor, freeSlotsByBarber, isBookableDate } from '../availability.js';
 import { isDate, nowLocal, toHHMM } from '../time.js';
+import { notifyAdmins } from '../push.js';
+
+const dayLabel = (date) => {
+  const [y, m, d] = date.split('-');
+  const today = nowLocal().date;
+  return date === today ? 'hoje' : `${d}/${m}`;
+};
 
 export const bookingRouter = Router();
 
@@ -70,7 +77,15 @@ bookingRouter.post('/appointments', requireAuth, ah(async (req, res) => {
       );
       return get('SELECT * FROM appointments WHERE id = ?', [lastInsertRowid], t);
     });
-    res.status(201).json({ appointment: serialize(created) });
+    const appt = serialize(created);
+    // Avisa a barbearia (aguarda para garantir o envio antes da função encerrar).
+    await notifyAdmins({
+      title: `Novo agendamento · ${dayLabel(appt.date)} ${appt.start}`,
+      body: `${req.user.name} — ${appt.service.name} com ${appt.barber.name}`,
+      url: `/painel?date=${appt.date}`,
+      tag: `appt-${appt.id}`,
+    });
+    res.status(201).json({ appointment: appt });
   } catch (err) {
     if (!err.status) console.error(err);
     res.status(err.status || 500).json({ error: err.status ? err.message : 'Não foi possível agendar.' });
@@ -86,5 +101,12 @@ bookingRouter.post('/appointments/:id/cancel', requireAuth, ah(async (req, res) 
   if (minutesUntil < CANCEL_MIN_HOURS * 60)
     return res.status(400).json({ error: `Cancelamentos só com ${CANCEL_MIN_HOURS}h de antecedência. Fale com a gente no WhatsApp.` });
   await run("UPDATE appointments SET status = 'cancelled' WHERE id = ?", [a.id]);
-  res.json({ appointment: serialize({ ...a, status: 'cancelled' }) });
+  const appt = serialize({ ...a, status: 'cancelled' });
+  await notifyAdmins({
+    title: `Cancelado · ${dayLabel(appt.date)} ${appt.start}`,
+    body: `${req.user.name} cancelou ${appt.service.name} com ${appt.barber.name}. O horário foi liberado.`,
+    url: `/painel?date=${appt.date}`,
+    tag: `appt-${appt.id}`,
+  });
+  res.json({ appointment: appt });
 }));

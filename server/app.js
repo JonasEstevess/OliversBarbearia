@@ -2,14 +2,16 @@ import express from 'express';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { initDb } from './db.js';
-import { loadUser, seedAdmin } from './auth.js';
+import { loadUser, seedAdmin, ensureSetupCode } from './auth.js';
 import { authRouter } from './routes/auth.js';
 import { bookingRouter } from './routes/booking.js';
 import { adminRouter } from './routes/admin.js';
+import { pushRouter } from './routes/push.js';
 
 // Garante tabelas e conta admin uma vez por instância (cold start na Vercel).
 let boot;
-const ensureReady = () => (boot ||= initDb().then(seedAdmin).catch((e) => { boot = null; throw e; }));
+const ensureReady = () =>
+  (boot ||= initDb().then(seedAdmin).then(ensureSetupCode).catch((e) => { boot = null; throw e; }));
 
 export const app = express();
 app.disable('x-powered-by');
@@ -38,6 +40,7 @@ app.use('/api', loadUser);
 app.use('/api/auth', authRouter);
 app.use('/api', bookingRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api', pushRouter);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Rota não encontrada.' }));
 
 // Em desenvolvimento o Express serve o front; na Vercel, a pasta public/ é servida pela CDN.
