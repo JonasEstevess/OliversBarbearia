@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Convite — Oliver's Barbearia</title>
+  <meta name="theme-color" content="#0b0a08">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/account.css">
+</head>
+<body>
+  <header class="nav is-scrolled">
+    <div class="container nav__inner">
+      <a class="brand" href="/"><img src="/img/logo.jpg" alt="" width="44" height="44"><span>Oliver's</span></a>
+    </div>
+  </header>
+
+  <main class="page container">
+    <div class="setup" data-box>
+      <p class="eyebrow">Convite da equipe</p>
+      <h1 class="display" style="font-size:64px;margin:12px 0" data-title>Carregando…</h1>
+    </div>
+  </main>
+
+  <script type="module">
+    import { api, toast, esc, maskPhone } from '/js/core.js';
+    const token = new URLSearchParams(location.search).get('token');
+    history.replaceState(null, '', '/convite');
+    const box = document.querySelector('[data-box]');
+
+    try {
+      const { barber, linked } = await api(`/auth/invite?token=${encodeURIComponent(token || '')}`);
+      const first = esc(barber.name.split(' ')[0]);
+      box.innerHTML = `
+        <p class="eyebrow">Convite da equipe</p>
+        <h1 class="display" style="font-size:64px;margin:12px 0">Bem-vindo, <span class="serif">${first}!</span></h1>
+        <p class="muted">Você foi adicionado à equipe da <b style="color:var(--cream)">Oliver's Barbearia</b>. Crie seu acesso para ver sua agenda, bloquear horários e editar seu perfil.</p>
+        <div class="tabs" role="tablist" style="margin:20px 0 0">
+          <button role="tab" data-mode="new" aria-selected="true">Criar acesso</button>
+          <button role="tab" data-mode="existing" aria-selected="false">Já tenho conta</button>
+        </div>
+        <form class="card" novalidate style="margin-top:12px">
+          <div class="field" data-only="new"><label for="i-name">Seu nome</label><input class="input" id="i-name" name="name" value="${esc(barber.name)}" autocomplete="name"></div>
+          <div class="field"><label for="i-email">E-mail</label><input class="input" id="i-email" name="email" type="email" autocomplete="email" required></div>
+          <div class="field" data-only="new"><label for="i-phone">WhatsApp</label><input class="input" id="i-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 90000-0000"></div>
+          <div class="field"><label for="i-pass" data-pass-label>Crie uma senha</label><input class="input" id="i-pass" name="password" type="password" minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres" required></div>
+          <label class="check" data-only="new"><input type="checkbox" name="acceptTerms"> <span>Li e aceito a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
+          <p class="form-error" aria-live="polite"></p>
+          <button class="btn btn--block" type="submit">Entrar na equipe <span class="arrow">→</span></button>
+        </form>`;
+      const form = box.querySelector('form');
+      const setMode = (m) => {
+        box.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === m)));
+        box.querySelectorAll('[data-only=new]').forEach((el) => (el.hidden = m !== 'new'));
+        box.querySelector('[data-pass-label]').textContent = m === 'new' ? 'Crie uma senha' : 'Senha da sua conta';
+        form.password.autocomplete = m === 'new' ? 'new-password' : 'current-password';
+      };
+      box.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+      form.phone.addEventListener('input', () => (form.phone.value = maskPhone(form.phone.value)));
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = form.querySelector('.form-error');
+        err.textContent = '';
+        try {
+          await api('/auth/invite', { method: 'POST', body: {
+            token, name: form.name.value, email: form.email.value, phone: form.phone.value,
+            password: form.password.value, acceptTerms: form.acceptTerms.checked,
+          } });
+          toast('Pronto! Bem-vindo à equipe.');
+          setTimeout(() => (location.href = '/painel?tab=perfil'), 800);
+        } catch (ex) { err.textContent = ex.message; }
+      });
+    } catch (ex) {
+      box.innerHTML = `<p class="eyebrow">Convite da equipe</p>
+        <h1 class="display" style="font-size:56px;margin:12px 0">Convite <span class="serif">inválido</span></h1>
+        <p class="muted">${esc(ex.message)}</p><a class="btn" href="/" style="margin-top:16px">Ir para o site</a>`;
+    }
+  </script>
+</body>
+</html>
