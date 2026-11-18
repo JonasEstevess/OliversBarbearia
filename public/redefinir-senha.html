@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nova senha — Oliver's Barbearia</title>
+  <meta name="theme-color" content="#0b0a08">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/account.css">
+</head>
+<body>
+  <header class="nav is-scrolled">
+    <div class="container nav__inner">
+      <a class="brand" href="/"><img src="/img/logo.jpg" alt="" width="44" height="44"><span>Oliver's</span></a>
+    </div>
+  </header>
+
+  <main class="page container">
+    <div class="gate" style="text-align:left">
+      <p class="eyebrow">Recuperar acesso</p>
+      <h1 class="display" style="font-size:72px;margin:12px 0">Nova <span class="serif">senha</span></h1>
+      <form class="card" style="display:grid;gap:14px" data-form novalidate>
+        <div class="field"><label for="p1">Nova senha</label><input class="input" id="p1" name="password" type="password" minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres" required></div>
+        <div class="field"><label for="p2">Repita a senha</label><input class="input" id="p2" name="confirm" type="password" minlength="8" autocomplete="new-password" required></div>
+        <p class="form-error" aria-live="polite"></p>
+        <button class="btn btn--block" type="submit">Salvar e entrar <span class="arrow">→</span></button>
+      </form>
+    </div>
+  </main>
+
+  <script type="module">
+    import { api, toast } from '/js/core.js';
+    const token = new URLSearchParams(location.search).get('token');
+    // Remove o token da barra de endereço (não fica no histórico).
+    history.replaceState(null, '', '/redefinir-senha');
+    const form = document.querySelector('[data-form]');
+    const err = form.querySelector('.form-error');
+    if (!token) err.textContent = 'Link inválido. Peça um novo para a barbearia.';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.textContent = '';
+      if (form.password.value !== form.confirm.value) return (err.textContent = 'As senhas não são iguais.');
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      try {
+        await api('/auth/reset', { method: 'POST', body: { token, password: form.password.value } });
+        toast('Senha alterada! Você já está conectado.');
+        setTimeout(() => (location.href = '/conta'), 900);
+      } catch (ex) {
+        err.textContent = ex.message;
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
