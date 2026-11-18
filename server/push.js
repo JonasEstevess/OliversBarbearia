@@ -60,8 +60,18 @@ async function sendTo(subs, payload) {
 // Nunca deixa uma falha de notificação quebrar o agendamento.
 const safe = (fn) => fn().catch((err) => { console.error('notificação', err); return 0; });
 
-export const notifyAdmins = (payload) =>
-  safe(async () => sendTo(await all("SELECT s.* FROM push_subscriptions s JOIN users u ON u.id = s.user_id WHERE u.role = 'admin'"), payload));
+// Dono(s) + o barbeiro dono do horário. Barbeiros não recebem avisos dos colegas.
+export const notifyStaff = (barberId, payload) =>
+  safe(async () =>
+    sendTo(
+      await all(
+        `SELECT DISTINCT s.* FROM push_subscriptions s JOIN users u ON u.id = s.user_id
+          WHERE u.role = 'admin' AND (COALESCE(u.staff_role, 'owner') = 'owner' OR u.id = (SELECT user_id FROM barbers WHERE id = ?))`,
+        [barberId || '']
+      ),
+      payload
+    )
+  );
 
 export const notifyUser = (userId, payload) =>
   safe(async () => sendTo(await all('SELECT * FROM push_subscriptions WHERE user_id = ?', [userId]), payload));

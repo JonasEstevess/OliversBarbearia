@@ -5,7 +5,7 @@ import { initDb } from './db.js';
 import { loadUser, seedAdmin, ensureSetupCode } from './auth.js';
 import { authRouter } from './routes/auth.js';
 import { bookingRouter } from './routes/booking.js';
-import { adminRouter } from './routes/admin.js';
+import { adminRouter, mediaRouter } from './routes/admin.js';
 import { pushRouter } from './routes/push.js';
 
 // Garante tabelas e conta admin uma vez por instância (cold start na Vercel).
@@ -16,7 +16,10 @@ const ensureReady = () =>
 export const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
-app.use(express.json({ limit: '20kb' }));
+// Upload de foto aceita até ~1 MB (a imagem já chega comprimida); o resto, 20 KB.
+const jsonSmall = express.json({ limit: '20kb' });
+const jsonPhoto = express.json({ limit: '1mb' });
+app.use((req, res, next) => (/\/photo$/.test(req.path) ? jsonPhoto : jsonSmall)(req, res, next));
 app.use((_req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
@@ -41,6 +44,7 @@ app.use('/api/auth', authRouter);
 app.use('/api', bookingRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api', pushRouter);
+app.use('/api', mediaRouter);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Rota não encontrada.' }));
 
 // Em desenvolvimento o Express serve o front; na Vercel, a pasta public/ é servida pela CDN.
