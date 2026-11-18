@@ -12,6 +12,13 @@ Site de agendamento online da **Oliver's Barbearia** — R. Serra dos Dois Irmã
 - **Login e cadastro** de clientes (e-mail, WhatsApp e senha).
 - **Minha conta** (`/conta`): próximo horário, histórico, cancelar (até 2h antes) e "repetir" um serviço.
 - **Painel da barbearia** (`/painel`): agenda do dia por barbeiro, faturamento previsto, concluir / faltou / cancelar e atalho para chamar o cliente no WhatsApp.
+  - **Bloqueios:** folgas, feriados e compromissos por barbeiro ou da barbearia inteira, por horário ou dia inteiro (também por período). Avisa se já havia clientes marcados.
+  - **Clientes:** busca por nome, e-mail ou WhatsApp e geração de **link de nova senha** (válido por 24h, uso único) enviado pelo WhatsApp.
+- **Notificações push** (site, app Android e app do iPhone instalado):
+  - A barbearia recebe um aviso a cada agendamento ou cancelamento.
+  - O cliente recebe um lembrete no dia do horário (8h) e um aviso se a barbearia cancelar.
+  - As chaves são geradas automaticamente e ficam no banco; não há nada para configurar.
+- **LGPD:** página `/privacidade`, aceite obrigatório no cadastro e exclusão da conta e de todos os dados pelo próprio cliente.
 
 ## Stack
 
@@ -29,6 +36,10 @@ npm run dev
 ```
 
 Acesse http://localhost:3000. A conta de administrador do `.env` é criada na primeira execução; entre com ela e acesse `/painel`.
+
+### Primeiro acesso ao painel (sem `.env`)
+
+Se `ADMIN_EMAIL`/`ADMIN_PASSWORD` não estiverem definidos, o painel mostra a tela **Criar conta da barbearia**. Ela pede um **código de configuração** de uso único, que o servidor escreve nos logs (na Vercel: *Logs*, linha `[CONFIGURAÇÃO INICIAL]`). Depois que o primeiro administrador é criado, essa tela deixa de existir.
 
 ## Estrutura
 
@@ -81,5 +92,6 @@ A Vercel não guarda arquivos entre requisições, então em produção o banco 
    - `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN` (se não vieram da integração)
    - `ADMIN_EMAIL` e `ADMIN_PASSWORD` — conta do painel, criada no primeiro acesso
 4. **Deploy.** As tabelas são criadas automaticamente na primeira requisição.
+5. **Lembretes:** o `vercel.json` agenda `/api/cron/reminders` todo dia às 8h (horário de Brasília). Opcional: defina `CRON_SECRET` para proteger a rota.
 
 Cada push na `main` gera um novo deploy; branches geram previews.
