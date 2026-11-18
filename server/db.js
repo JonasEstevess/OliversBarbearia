@@ -78,12 +78,56 @@ const SCHEMA = [
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
   'CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id)',
+  // Barbeiros editáveis pelo painel. user_id liga o perfil à conta de acesso do barbeiro.
+  `CREATE TABLE IF NOT EXISTS barbers (
+    id         TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    specialty  TEXT,
+    photo_id   INTEGER,
+    user_id    INTEGER UNIQUE,
+    hours      TEXT,
+    active     INTEGER NOT NULL DEFAULT 1,
+    sort       INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  // Serviços e preços editáveis pelo dono (preço em centavos, duração em minutos).
+  `CREATE TABLE IF NOT EXISTS services (
+    id          TEXT PRIMARY KEY,
+    cat         TEXT NOT NULL,
+    name        TEXT NOT NULL,
+    description TEXT,
+    price       INTEGER NOT NULL,
+    duration    INTEGER NOT NULL,
+    popular     INTEGER NOT NULL DEFAULT 0,
+    active      INTEGER NOT NULL DEFAULT 1,
+    sort        INTEGER NOT NULL DEFAULT 0
+  )`,
+  // Fotos enviadas pelo painel (já comprimidas no aparelho).
+  `CREATE TABLE IF NOT EXISTS media (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    mime       TEXT NOT NULL,
+    data       TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  // Convites para novos barbeiros criarem a conta.
+  `CREATE TABLE IF NOT EXISTS invites (
+    token_hash TEXT PRIMARY KEY,
+    barber_id  TEXT NOT NULL,
+    expires_at INTEGER NOT NULL
+  )`,
 ];
 
 // Colunas adicionadas depois da primeira versão (ignora se já existirem).
 const MIGRATIONS = [
   'ALTER TABLE appointments ADD COLUMN reminded_at INTEGER',
   'ALTER TABLE users ADD COLUMN accepted_terms_at TEXT',
+  // role = 'admin' significa "equipe"; staff_role diz se é dono (tudo) ou barbeiro (só o próprio).
+  'ALTER TABLE users ADD COLUMN staff_role TEXT',
+];
+
+// Ajustes de dados idempotentes, rodados a cada inicialização.
+const DATA_FIXES = [
+  "UPDATE users SET staff_role = 'owner' WHERE role = 'admin' AND staff_role IS NULL",
 ];
 
 let ready;
@@ -97,6 +141,8 @@ export function initDb() {
         if (!/duplicate column/i.test(String(err.message))) throw err;
       }
     }
+    for (const sql of DATA_FIXES) await db.execute(sql);
+    await (await import('./store.js')).seedCatalog();
   })().catch((err) => {
     ready = null;
     throw err;
