@@ -5,7 +5,7 @@ document.querySelectorAll('[data-img]').forEach((img) => (img.src = IMG[img.data
 initNav();
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-book]');
-  if (b) openBooking({ serviceId: b.dataset.service, barberId: b.dataset.barber });
+  if (b) openBooking({ serviceIds: (b.dataset.services || b.dataset.service || "").split(",").filter(Boolean), barberId: b.dataset.barber });
 });
 
 const user = await session.load();
@@ -65,7 +65,7 @@ function row(a, i, upcoming) {
       <span class="badge badge--${status}">${STATUS[status]}</span>
       ${upcoming
         ? `<button class="btn btn--ghost btn--sm" data-cancel="${a.id}">Cancelar</button>`
-        : `<button class="btn btn--ghost btn--sm" data-book data-service="${a.service.id}" data-barber="${a.barber.id}">Repetir</button>`}
+        : `<button class="btn btn--ghost btn--sm" data-book data-services="${(a.items?.length ? a.items.map((i) => i.id) : [a.service.id]).join(",")}" data-barber="${a.barber.id}">Repetir</button>`}
     </div>
   </article>`;
 }
