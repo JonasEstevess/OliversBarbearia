@@ -9,14 +9,18 @@ export function isBookableDate(date) {
   return date >= today && date <= addDays(today, BOOKING_WINDOW_DAYS);
 }
 
-async function busyByBarber(date, ex) {
-  const rows = await all(
-    "SELECT barber_id, start_min, end_min FROM appointments WHERE date = ? AND status IN ('booked','done')",
-    [date],
-    ex
-  );
-  const map = {};
-  for (const r of rows) (map[r.barber_id] ||= []).push(r);
+// Intervalos ocupados por barbeiro: agendamentos + bloqueios (folgas, feriados...).
+async function busyByBarber(date, ids, ex) {
+  const [appts, blocks] = await Promise.all([
+    all("SELECT barber_id, start_min, end_min FROM appointments WHERE date = ? AND status IN ('booked','done')", [date], ex),
+    all('SELECT barber_id, start_min, end_min FROM blocks WHERE date = ?', [date], ex),
+  ]);
+  const map = Object.fromEntries(ids.map((id) => [id, []]));
+  for (const a of appts) map[a.barber_id]?.push(a);
+  for (const b of blocks) {
+    if (b.barber_id) map[b.barber_id]?.push(b);
+    else for (const id of ids) map[id].push(b); // bloqueio da barbearia inteira
+  }
   return map;
 }
 
@@ -40,8 +44,8 @@ function computeFree(date, duration, busy) {
 // Horários livres (em minutos) de cada barbeiro pedido, numa única consulta.
 export async function freeSlotsByBarber(ids, date, duration, ex) {
   if (!isBookableDate(date)) return Object.fromEntries(ids.map((id) => [id, []]));
-  const busy = await busyByBarber(date, ex);
-  return Object.fromEntries(ids.map((id) => [id, computeFree(date, duration, busy[id] || [])]));
+  const busy = await busyByBarber(date, ids, ex);
+  return Object.fromEntries(ids.map((id) => [id, computeFree(date, duration, busy[id])]));
 }
 
 // Para "qualquer barbeiro": união dos horários, com o barbeiro livre de cada horário.
