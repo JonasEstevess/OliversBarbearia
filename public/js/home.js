@@ -156,8 +156,15 @@ document.querySelector('[data-team]').innerHTML =
 const track = document.querySelector('[data-gallery]');
 track.innerHTML =
   IMG.cuts.map((src, i) => `<figure class="gallery__item" style="margin:0"><img src="${src}" alt="Corte feito na Oliver's Barbearia ${i + 1}" loading="lazy"></figure>`).join('') +
-  IMG.space.map((p) => `<figure class="gallery__item gallery__item--space" style="margin:0"><img src="${p.src}" alt="${esc(p.caption)} na Oliver's Barbearia" loading="lazy"><figcaption>${esc(p.caption)}</figcaption></figure>`).join('') +
   `<div class="gallery__item gallery__item--cta" data-book role="button" tabindex="0"><div><strong>Quero<br>o meu</strong><p>Agendar agora →</p></div></div>`;
+
+// ---------- o espaço (café e petiscos ficam fora da galeria de cortes) ----------
+const space = document.querySelector('[data-space]');
+if (space) {
+  space.innerHTML = IMG.space
+    .map((p) => `<figure class="space__item" data-reveal><img src="${p.src}" alt="${esc(p.caption)} na Oliver's Barbearia" loading="lazy"><figcaption>${esc(p.caption)}</figcaption></figure>`)
+    .join('');
+}
 
 const gallery = document.querySelector('.gallery');
 function galleryScroll() {

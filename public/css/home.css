@@ -188,7 +188,6 @@
 .gallery__item:nth-child(even) { transform: translateY(40px); }
 .gallery__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
 .gallery__item:hover img { transform: scale(1.06); }
-.gallery__item--space figcaption { position: absolute; left: 16px; bottom: 16px; padding: 6px 12px; border-radius: 999px; background: rgba(11, 10, 8, 0.7); backdrop-filter: blur(8px); font-size: 13px; font-weight: 600; }
 .gallery__item--cta { display: grid; place-items: center; text-align: center; background: var(--gold); color: var(--gold-ink); padding: 24px; cursor: pointer; }
 .gallery__item--cta strong { font-family: var(--f-display); font-weight: 400; font-size: 54px; line-height: 0.9; text-transform: uppercase; display: block; }
 @media (max-width: 860px) {
@@ -232,3 +231,17 @@
 .mobile-cta { position: fixed; left: 16px; right: 16px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 90; display: none; height: 56px; box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8); transform: translateY(140%); transition: transform 0.6s var(--ease); }
 .mobile-cta.show { transform: none; }
 @media (max-width: 720px) { .mobile-cta { display: inline-flex; } .footer { padding-bottom: 96px; } }
+
+/* ===== o espaço (café e petiscos) ===== */
+.space { display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(24px, 4vw, 64px); align-items: center; padding-top: clamp(80px, 10vw, 140px); }
+.space__text p.muted { font-size: 17px; max-width: 34ch; margin: 16px 0 0; }
+.space__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.space__item { position: relative; margin: 0; border-radius: var(--r-lg); overflow: hidden; aspect-ratio: 4 / 5; background: var(--ink-2); }
+.space__item:nth-child(2) { transform: translateY(40px); }
+.space__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+.space__item:hover img { transform: scale(1.05); }
+.space__item figcaption { position: absolute; left: 14px; bottom: 14px; padding: 6px 12px; border-radius: 999px; background: rgba(11, 10, 8, 0.7); backdrop-filter: blur(8px); font-size: 13px; font-weight: 600; }
+@media (max-width: 860px) {
+  .space { grid-template-columns: 1fr; }
+  .space__item:nth-child(2) { transform: none; }
+}
