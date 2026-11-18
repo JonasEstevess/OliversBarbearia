@@ -37,6 +37,10 @@ npm run dev
 
 Acesse http://localhost:3000. A conta de administrador do `.env` é criada na primeira execução; entre com ela e acesse `/painel`.
 
+### Definir o dono pelo e-mail
+
+Defina `OWNER_EMAIL` (na Vercel: *Settings → Environment Variables*) com o e-mail da conta que deve ser dona. Ao entrar no site com esse e-mail (ou ao criar a conta), ela vira dona automaticamente, com a própria senha. Aceita vários e-mails separados por vírgula.
+
 ### Primeiro acesso ao painel (sem `.env`)
 
 Se `ADMIN_EMAIL`/`ADMIN_PASSWORD` não estiverem definidos, o painel mostra a tela **Criar conta da barbearia**. Ela pede um **código de configuração** de uso único, que o servidor escreve nos logs (na Vercel: *Logs*, linha `[CONFIGURAÇÃO INICIAL]`). Depois que o primeiro administrador é criado, essa tela deixa de existir.
