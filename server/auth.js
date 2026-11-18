@@ -153,11 +153,11 @@ export function safeEqual(a, b) {
 
 // ---------- redefinição de senha ----------
 const RESET_HOURS = 24;
-export async function createResetToken(userId) {
+export async function createResetToken(userId, hours = RESET_HOURS) {
   const token = randomBytes(24).toString('base64url');
   await run('DELETE FROM reset_tokens WHERE user_id = ? OR expires_at < ?', [userId, Date.now()]);
-  await run('INSERT INTO reset_tokens (token_hash, user_id, expires_at) VALUES (?, ?, ?)', [sha(token), userId, Date.now() + RESET_HOURS * 36e5]);
-  return { token, hours: RESET_HOURS };
+  await run('INSERT INTO reset_tokens (token_hash, user_id, expires_at) VALUES (?, ?, ?)', [sha(token), userId, Date.now() + hours * 36e5]);
+  return { token, hours };
 }
 
 export async function consumeResetToken(token) {

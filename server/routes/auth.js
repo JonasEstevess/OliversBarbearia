@@ -2,8 +2,9 @@ import { Router } from 'express';
 import { get, run, getSetting } from '../db.js';
 import {
   ah, hashPassword, verifyPassword, createSession, destroySession, rateLimit, requireAuth,
-  adminExists, safeEqual, consumeResetToken, findInvite, deleteInvite,
+  adminExists, safeEqual, consumeResetToken, findInvite, deleteInvite, createResetToken,
 } from '../auth.js';
+import { mailEnabled, sendPasswordResetEmail } from '../mail.js';
 import { getBarber } from '../store.js';
 
 export const authRouter = Router();
@@ -99,7 +100,36 @@ authRouter.post('/setup', rateLimit(5), ah(async (req, res) => {
   res.status(201).json({ user: { id, name: data.name, email: data.email, phone: data.phone, role: 'admin', staffRole: 'owner', barberId: null } });
 }));
 
-// ---------- redefinir senha (link gerado pela barbearia) ----------
+// ---------- esqueci minha senha: link por e-mail ----------
+const EMAIL_RESET_MINUTES = 60;
+authRouter.get('/forgot', (_req, res) => res.json({ emailEnabled: mailEnabled() }));
+
+authRouter.post('/forgot', rateLimit(5), ah(async (req, res) => {
+  if (!mailEnabled()) return res.status(503).json({ error: 'Recuperação por e-mail indisponível no momento. Fale com a barbearia.' });
+  const email = clean(req.body.email).toLowerCase();
+  if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Digite o e-mail da sua conta.' });
+  const user = await get('SELECT id, name, email FROM users WHERE email = ?', [email]);
+  if (user) {
+    // Evita enviar vários e-mails seguidos para a mesma conta (1 por minuto).
+    const recent = await get('SELECT 1 AS x FROM reset_tokens WHERE user_id = ? AND expires_at > ?', [
+      user.id, Date.now() + (EMAIL_RESET_MINUTES - 1) * 60e3,
+    ]);
+    if (!recent) {
+      const { token } = await createResetToken(user.id, EMAIL_RESET_MINUTES / 60);
+      const url = `${req.protocol}://${req.get('host')}/redefinir-senha?token=${token}`;
+      try {
+        await sendPasswordResetEmail({ to: user.email, name: user.name, url, minutes: EMAIL_RESET_MINUTES });
+      } catch (err) {
+        console.error('falha ao enviar e-mail de senha', err.message);
+        return res.status(502).json({ error: 'Não conseguimos enviar o e-mail agora. Tente de novo em alguns minutos.' });
+      }
+    }
+  }
+  // Mesma resposta exista ou não a conta (não revela quais e-mails estão cadastrados).
+  res.json({ ok: true });
+}));
+
+// ---------- redefinir senha (link por e-mail ou gerado pela barbearia) ----------
 authRouter.post('/reset', rateLimit(10), ah(async (req, res) => {
   const password = String(req.body.password ?? '');
   if (password.length < 8) return res.status(400).json({ error: 'A senha precisa ter ao menos 8 caracteres.' });
