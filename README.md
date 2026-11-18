@@ -61,9 +61,26 @@ public/
   css/ js/
 ```
 
-## Editando serviços, preços e horários
+## Equipe e permissões
 
-Tudo fica em [`server/catalog.js`](server/catalog.js). Os preços estão em centavos (`4000` = R$ 40,00).
+Tudo é editado pelo **painel** (`/painel`). As mudanças aparecem na hora no site e nos apps de todos.
+
+| | Dono | Barbeiro |
+|---|---|---|
+| Agenda, faturamento e notificações | De todos | Só os dele |
+| Cancelar / concluir / faltou | Qualquer horário | Só os dele |
+| Bloqueios | Qualquer barbeiro ou a barbearia inteira | Só a própria agenda |
+| Nome, foto, especialidade, horário de trabalho | De todos | O próprio |
+| Serviços, preços e horário da barbearia | ✓ | — |
+| Equipe (convidar, desligar, promover a dono) | ✓ | — |
+
+- **Contratar:** *Equipe → Adicionar barbeiro* cria o perfil e um convite (7 dias) enviado pelo WhatsApp. O barbeiro cria a senha em `/convite` e já entra no painel.
+- **Conta existente:** *Equipe → Dar acesso a uma conta existente* promove pelo e-mail.
+- **Dono que também corta:** botão *Sou eu* liga a conta do dono a um perfil de barbeiro.
+- **Desligar:** o barbeiro some do site e perde o acesso; o histórico é mantido.
+- A barbearia sempre tem pelo menos um dono (o último não pode ser rebaixado nem excluído).
+
+Na primeira execução, os barbeiros, serviços e horários de [`server/catalog.js`](server/catalog.js) são copiados para o banco; depois disso, o painel é a fonte oficial. Fotos são comprimidas no aparelho (640×640) e guardadas no banco, servidas em `/api/media/:id`.
 
 ## Convenções
 
