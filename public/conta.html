@@ -45,6 +45,22 @@
 
     <h2 class="list-title">Histórico</h2>
     <div class="appt-list" data-history></div>
+
+    <h2 class="list-title">Configurações</h2>
+    <div class="card switch-row">
+      <div><strong>Lembretes no celular</strong><small data-push-hint>Avisamos no dia do seu horário e se houver alguma mudança.</small></div>
+      <button class="switch" role="switch" aria-checked="false" aria-label="Lembretes no celular" data-push></button>
+    </div>
+
+    <div class="card danger-zone" style="margin-top:10px;display:grid;gap:12px">
+      <div><strong>Excluir minha conta</strong><br><small class="muted">Apaga seu cadastro e todo o histórico de agendamentos. Não dá para desfazer.</small></div>
+      <form data-delete hidden style="display:grid;gap:10px">
+        <div class="field"><label for="del-pass">Confirme sua senha</label><input class="input" id="del-pass" type="password" autocomplete="current-password" required></div>
+        <button class="btn btn--danger btn--sm" type="submit">Excluir conta e dados</button>
+      </form>
+      <button class="btn btn--danger btn--sm" style="justify-self:start" data-delete-open>Excluir minha conta</button>
+    </div>
+    <p class="muted" style="font-size:13px;margin-top:20px">Veja como cuidamos dos seus dados na <a href="/privacidade" style="color:var(--gold-2)">Política de Privacidade</a>.</p>
   </main>
 
   <script type="module" src="/js/account.js"></script>

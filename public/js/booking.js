@@ -1,4 +1,4 @@
-import { api, session, openAuth, registerLayer, toast, money, duration, esc, fmtDay, parseDate, isoDate, icsFor, waLink, firstName } from './core.js';
+import { api, session, openAuth, registerLayer, toast, money, duration, esc, fmtDay, parseDate, isoDate, icsFor, waLink, firstName, enablePush, pushStatus } from './core.js';
 
 let catalog;
 let drawer;
@@ -76,6 +76,13 @@ function onBodyClick(e) {
   if (pick === 'time') { state.time = value; state.slotBarber = t.dataset.barber; }
   if (pick === 'login') return loginThenConfirm();
   if (pick === 'close') return drawer.close();
+  if (pick === 'push') {
+    t.disabled = true;
+    enablePush()
+      .then(() => { t.textContent = '✓ Lembrete ativado'; toast('Pronto! Vamos te lembrar no dia.'); })
+      .catch((e) => { t.disabled = false; toast(e.message, 'error'); });
+    return;
+  }
   render(false);
 }
 
@@ -89,7 +96,10 @@ function render(full = true) {
   el.querySelector('[data-back]').style.visibility = state.step > 0 && !done ? 'visible' : 'hidden';
 
   const body = el.querySelector('[data-body]');
-  if (done) body.innerHTML = viewDone();
+  if (done) {
+    body.innerHTML = viewDone();
+    pushStatus().then((st) => { if (st !== 'off') body.querySelector('[data-push-cta]')?.remove(); });
+  }
   else if (full || state.step !== 2) body.innerHTML = [viewServices, viewBarbers, viewWhen, viewReview][state.step]();
   else updateWhen(body);
 
@@ -270,7 +280,8 @@ function viewDone() {
       <div><small class="muted">Valor</small><strong>${money(a.price)}</strong></div>
     </div>
     <div class="done__actions">
-      <a class="btn btn--block" href="${icsFor(a, catalog.shop)}" download="olivers-${a.date}.ics">Adicionar ao calendário</a>
+      <button class="btn btn--block" data-pick="push" data-push-cta>🔔 Me lembrar no dia</button>
+      <a class="btn btn--ghost btn--block" href="${icsFor(a, catalog.shop)}" download="olivers-${a.date}.ics">Adicionar ao calendário</a>
       <a class="btn btn--ghost btn--block" target="_blank" rel="noopener" href="${waLink(catalog.shop.whatsapp, msg)}">Avisar no WhatsApp</a>
       <a class="link" href="/conta">Ver meus agendamentos →</a>
     </div>

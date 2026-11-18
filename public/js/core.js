@@ -107,8 +107,14 @@ function buildAuthModal() {
       <div class="field"><label for="a-email">E-mail</label><input class="input" id="a-email" name="email" type="email" autocomplete="email" placeholder="voce@email.com" required></div>
       <div class="field" data-only="register"><label for="a-phone">WhatsApp</label><input class="input" id="a-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 90000-0000"></div>
       <div class="field"><label for="a-pass">Senha</label><input class="input" id="a-pass" name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres"></div>
+      <label class="check" data-only="register"><input type="checkbox" name="acceptTerms"> <span>Li e aceito a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
       <p class="form-error" aria-live="polite"></p>
       <button class="btn btn--block" type="submit"><span data-submit>Entrar</span> <span class="arrow">→</span></button>
+      <button class="link forgot" type="button" data-only="login" data-forgot>Esqueci minha senha</button>
+      <div class="forgot-box" hidden data-forgot-box>
+        <p>Sem problema! Chame a barbearia no WhatsApp e peça um <b>link para criar uma senha nova</b>. Leva 1 minuto.</p>
+        <a class="btn btn--ghost btn--block" target="_blank" rel="noopener" data-forgot-wa>Pedir link no WhatsApp</a>
+      </div>
     </form>`;
   document.body.append(el);
 
@@ -126,6 +132,8 @@ function buildAuthModal() {
     mode = m;
     el.querySelectorAll('[role=tab]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.mode === m)));
     el.querySelectorAll('[data-only=register]').forEach((f) => (f.hidden = m !== 'register'));
+    el.querySelectorAll('[data-only=login]').forEach((f) => (f.hidden = m !== 'login'));
+    el.querySelector('[data-forgot-box]').hidden = true;
     title.innerHTML = m === 'login' ? 'Bem-vindo<br><span class="serif">de volta</span>' : 'Crie sua<br><span class="serif">conta</span>';
     el.querySelector('[data-submit]').textContent = m === 'login' ? 'Entrar' : 'Criar conta';
     el.querySelector('#a-pass').autocomplete = m === 'login' ? 'current-password' : 'new-password';
@@ -141,11 +149,17 @@ function buildAuthModal() {
 
   el.querySelectorAll('[role=tab]').forEach((t) => t.addEventListener('click', () => setMode(t.dataset.mode)));
   el.querySelector('.modal__close').addEventListener('click', () => close(null));
+  el.querySelector('[data-forgot]').addEventListener('click', () => {
+    const email = el.querySelector('#a-email').value.trim();
+    el.querySelector('[data-forgot-wa]').href = waLink(SHOP_WHATSAPP, `Olá! Esqueci minha senha do site da Oliver's. Pode me mandar um link para criar uma nova?${email ? ` Meu e-mail é ${email}.` : ''}`);
+    el.querySelector('[data-forgot-box]').hidden = false;
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     err.textContent = '';
     const data = Object.fromEntries(new FormData(form));
+    data.acceptTerms = form.acceptTerms.checked;
     const btn = form.querySelector('button[type=submit]');
     btn.disabled = true;
     try {
@@ -172,6 +186,8 @@ function buildAuthModal() {
     },
   };
 }
+
+export const SHOP_WHATSAPP = '5511951217241';
 
 export function maskPhone(v) {
   const d = v.replace(/\D/g, '').slice(0, 11);
@@ -237,4 +253,47 @@ export function waLink(phone, text) { return `https://wa.me/${phone}?text=${enco
 // ---------- PWA ----------
 if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
   addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
+// ---------- notificações push ----------
+export const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+function urlB64ToUint8(base64) {
+  const pad = '='.repeat((4 - (base64.length % 4)) % 4);
+  const raw = atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+async function swRegistration() {
+  return (await navigator.serviceWorker.getRegistration('/')) || navigator.serviceWorker.register('/sw.js');
+}
+
+export async function pushStatus() {
+  if (!pushSupported()) return 'unsupported';
+  if (Notification.permission === 'denied') return 'denied';
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  const sub = reg && (await reg.pushManager.getSubscription());
+  return sub ? 'on' : 'off';
+}
+
+// Pede permissão, inscreve o aparelho e envia uma notificação de teste.
+export async function enablePush() {
+  if (!pushSupported()) throw new Error('Este navegador não suporta notificações. No iPhone, instale o app pela Tela de Início primeiro.');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Permissão negada. Libere as notificações nas configurações do navegador.');
+  const reg = await swRegistration();
+  await navigator.serviceWorker.ready;
+  const { publicKey } = await api('/push/key');
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8(publicKey) });
+  await api('/push/subscribe', { method: 'POST', body: { subscription: sub.toJSON() } });
+  await api('/push/test', { method: 'POST' });
+}
+
+export async function disablePush() {
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  const sub = reg && (await reg.pushManager.getSubscription());
+  if (!sub) return;
+  await api('/push/unsubscribe', { method: 'POST', body: { endpoint: sub.endpoint } }).catch(() => {});
+  await sub.unsubscribe();
 }
