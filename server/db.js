@@ -47,12 +47,68 @@ const SCHEMA = [
   )`,
   'CREATE INDEX IF NOT EXISTS idx_appt_barber_date ON appointments(barber_id, date)',
   'CREATE INDEX IF NOT EXISTS idx_appt_user ON appointments(user_id)',
+  // Configurações internas (chaves de notificação, código de configuração inicial).
+  `CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )`,
+  // Horários bloqueados: folgas, feriados, compromissos. barber_id NULL = barbearia inteira.
+  `CREATE TABLE IF NOT EXISTS blocks (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    barber_id  TEXT,
+    date       TEXT NOT NULL,
+    start_min  INTEGER NOT NULL,
+    end_min    INTEGER NOT NULL,
+    reason     TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_blocks_date ON blocks(date)',
+  // Links de redefinição de senha gerados pela barbearia.
+  `CREATE TABLE IF NOT EXISTS reset_tokens (
+    token_hash TEXT PRIMARY KEY,
+    user_id    INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+  )`,
+  // Inscrições de notificação push (um registro por aparelho).
+  `CREATE TABLE IF NOT EXISTS push_subscriptions (
+    endpoint   TEXT PRIMARY KEY,
+    user_id    INTEGER NOT NULL,
+    p256dh     TEXT NOT NULL,
+    auth       TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  'CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id)',
+];
+
+// Colunas adicionadas depois da primeira versão (ignora se já existirem).
+const MIGRATIONS = [
+  'ALTER TABLE appointments ADD COLUMN reminded_at INTEGER',
+  'ALTER TABLE users ADD COLUMN accepted_terms_at TEXT',
 ];
 
 let ready;
 export function initDb() {
-  ready ||= db.batch(SCHEMA, 'write');
+  ready ||= (async () => {
+    await db.batch(SCHEMA, 'write');
+    for (const sql of MIGRATIONS) {
+      try {
+        await db.execute(sql);
+      } catch (err) {
+        if (!/duplicate column/i.test(String(err.message))) throw err;
+      }
+    }
+  })().catch((err) => {
+    ready = null;
+    throw err;
+  });
   return ready;
+}
+
+export async function getSetting(key) {
+  return (await get('SELECT value FROM settings WHERE key = ?', [key]))?.value ?? null;
+}
+export async function setSetting(key, value) {
+  await run('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [key, value]);
 }
 
 const toObjects = (rs) => rs.rows.map((r) => Object.fromEntries(rs.columns.map((c, i) => [c, r[i]])));

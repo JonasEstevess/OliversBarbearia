@@ -29,8 +29,22 @@
     <div class="page__head">
       <div>
         <p class="eyebrow">Painel da barbearia</p>
-        <h1 class="display">Agenda</h1>
+        <h1 class="display" data-title>Agenda</h1>
       </div>
+      <div class="admin-tabs" role="tablist" aria-label="Seções do painel">
+        <button role="tab" data-tab="agenda" aria-selected="true">Agenda</button>
+        <button role="tab" data-tab="bloqueios" aria-selected="false">Bloqueios</button>
+        <button role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
+      </div>
+    </div>
+
+    <div class="card switch-row" style="margin-bottom:28px">
+      <div><strong>🔔 Avisos de agendamento neste aparelho</strong><small data-push-hint>Receba uma notificação a cada novo agendamento ou cancelamento.</small></div>
+      <button class="switch" role="switch" aria-checked="false" aria-label="Avisos de agendamento" data-push></button>
+    </div>
+
+    <!-- AGENDA -->
+    <section data-panel="agenda">
       <div class="toolbar">
         <div class="day-nav">
           <button data-shift="-1" aria-label="Dia anterior">←</button>
@@ -40,18 +54,48 @@
         <button class="btn btn--ghost btn--sm" data-today>Hoje</button>
         <select class="input" data-barber aria-label="Barbeiro"><option value="">Todos os barbeiros</option></select>
       </div>
-    </div>
+      <p class="day-label" data-day-label></p>
+      <div class="kpis">
+        <div class="kpi"><small>Agendamentos</small><strong data-k="total">0</strong></div>
+        <div class="kpi kpi--gold"><small>Faturamento previsto</small><strong data-k="revenue">R$ 0</strong></div>
+        <div class="kpi"><small>Concluídos</small><strong data-k="done">0</strong></div>
+        <div class="kpi"><small>Cancelados</small><strong data-k="cancelled">0</strong></div>
+      </div>
+      <div class="day-blocks" data-day-blocks></div>
+      <div class="timeline" data-timeline></div>
+    </section>
 
-    <p class="day-label" data-day-label></p>
+    <!-- BLOQUEIOS -->
+    <section data-panel="bloqueios" hidden>
+      <form class="card block-form" data-block-form novalidate>
+        <h2 class="block-form__title">Bloquear horário</h2>
+        <p class="muted" style="margin:0 0 6px;font-size:14px">Folga, feriado, médico, curso… Os horários bloqueados somem da agenda online.</p>
+        <div class="grid-2">
+          <div class="field"><label for="b-barber">Quem</label>
+            <select class="input" id="b-barber" name="barberId"><option value="">Barbearia inteira</option></select></div>
+          <div class="field"><label for="b-reason">Motivo (opcional)</label>
+            <input class="input" id="b-reason" name="reason" maxlength="120" placeholder="Ex.: Feriado, folga, médico"></div>
+          <div class="field"><label for="b-date">De</label><input class="input" id="b-date" name="date" type="date" required></div>
+          <div class="field"><label for="b-end">Até (opcional)</label><input class="input" id="b-end" name="endDate" type="date"></div>
+        </div>
+        <label class="check"><input type="checkbox" name="allDay" checked data-allday> <span>Dia inteiro</span></label>
+        <div class="grid-2" data-times hidden>
+          <div class="field"><label for="b-start">Das</label><input class="input" id="b-start" name="start" type="time" value="09:00" step="900"></div>
+          <div class="field"><label for="b-stop">Até</label><input class="input" id="b-stop" name="end" type="time" value="12:00" step="900"></div>
+        </div>
+        <p class="form-error" aria-live="polite"></p>
+        <button class="btn" type="submit">Bloquear <span class="arrow">→</span></button>
+      </form>
+      <h2 class="list-title">Próximos bloqueios</h2>
+      <div class="timeline" data-blocks></div>
+    </section>
 
-    <div class="kpis">
-      <div class="kpi"><small>Agendamentos</small><strong data-k="total">0</strong></div>
-      <div class="kpi kpi--gold"><small>Faturamento previsto</small><strong data-k="revenue">R$ 0</strong></div>
-      <div class="kpi"><small>Concluídos</small><strong data-k="done">0</strong></div>
-      <div class="kpi"><small>Cancelados</small><strong data-k="cancelled">0</strong></div>
-    </div>
-
-    <div class="timeline" data-timeline></div>
+    <!-- CLIENTES -->
+    <section data-panel="clientes" hidden>
+      <input class="input" type="search" placeholder="Buscar por nome, e-mail ou WhatsApp" data-client-q style="margin-bottom:16px">
+      <p class="muted" style="font-size:14px;margin:0 0 16px">Cliente esqueceu a senha? Toque em <b style="color:var(--cream)">Link de nova senha</b> e envie pelo WhatsApp. O link vale por 24 horas e só pode ser usado uma vez.</p>
+      <div class="timeline" data-clients></div>
+    </section>
   </main>
 
   <script type="module" src="/js/admin.js"></script>

@@ -107,3 +107,43 @@ export async function seedAdmin() {
   ]);
   console.log(`Conta admin criada: ${email}`);
 }
+
+// ---------- configuração inicial ----------
+// Enquanto não existir nenhum administrador, o servidor gera um código de uso único
+// e o mostra nos logs (Vercel → Logs). Quem tiver acesso aos logs cria a conta do dono.
+export async function adminExists() {
+  return !!(await get("SELECT 1 AS x FROM users WHERE role = 'admin' LIMIT 1"));
+}
+
+export async function ensureSetupCode() {
+  if (await adminExists()) return null;
+  let code = (await get("SELECT value FROM settings WHERE key = 'setup_code'"))?.value;
+  if (!code) {
+    code = randomBytes(5).toString('hex').toUpperCase().match(/.{1,5}/g).join('-');
+    await run("INSERT OR REPLACE INTO settings (key, value) VALUES ('setup_code', ?)", [code]);
+  }
+  console.log(`[CONFIGURAÇÃO INICIAL] Nenhum administrador cadastrado. Código para criar a conta em /painel: ${code}`);
+  return code;
+}
+
+export function safeEqual(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && timingSafeEqual(x, y);
+}
+
+// ---------- redefinição de senha ----------
+const RESET_HOURS = 24;
+export async function createResetToken(userId) {
+  const token = randomBytes(24).toString('base64url');
+  await run('DELETE FROM reset_tokens WHERE user_id = ? OR expires_at < ?', [userId, Date.now()]);
+  await run('INSERT INTO reset_tokens (token_hash, user_id, expires_at) VALUES (?, ?, ?)', [sha(token), userId, Date.now() + RESET_HOURS * 36e5]);
+  return { token, hours: RESET_HOURS };
+}
+
+export async function consumeResetToken(token) {
+  const row = await get('SELECT * FROM reset_tokens WHERE token_hash = ?', [sha(String(token || ''))]);
+  if (!row || row.expires_at < Date.now()) return null;
+  await run('DELETE FROM reset_tokens WHERE token_hash = ?', [row.token_hash]);
+  return row.user_id;
+}
