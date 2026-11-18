@@ -9,7 +9,7 @@ Site de agendamento online da **Oliver's Barbearia** — R. Serra dos Dois Irmã
   - Só mostra horários realmente livres, respeitando expediente, intervalo de almoço, duração do serviço e agenda de cada barbeiro.
   - Proteção contra dois clientes reservarem o mesmo horário ao mesmo tempo.
   - Após confirmar: adicionar ao calendário (.ics) e avisar no WhatsApp.
-- **Login e cadastro** de clientes (e-mail, WhatsApp e senha).
+- **Login e cadastro** de clientes (e-mail, WhatsApp e senha), com **"Esqueci minha senha" por e-mail** (link válido por 1 hora).
 - **Minha conta** (`/conta`): próximo horário, histórico, cancelar (até 2h antes) e "repetir" um serviço.
 - **Painel da barbearia** (`/painel`): agenda do dia por barbeiro, faturamento previsto, concluir / faltou / cancelar e atalho para chamar o cliente no WhatsApp.
   - **Bloqueios:** folgas, feriados e compromissos por barbeiro ou da barbearia inteira, por horário ou dia inteiro (também por período). Avisa se já havia clientes marcados.
@@ -109,6 +109,7 @@ A Vercel não guarda arquivos entre requisições, então em produção o banco 
    - `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN` (se não vieram da integração)
    - `ADMIN_EMAIL` e `ADMIN_PASSWORD` — conta do painel, criada no primeiro acesso
 4. **Deploy.** As tabelas são criadas automaticamente na primeira requisição.
-5. **Lembretes:** o `vercel.json` agenda `/api/cron/reminders` todo dia às 8h (horário de Brasília). Opcional: defina `CRON_SECRET` para proteger a rota.
+5. **E-mail (recuperação de senha):** crie um Gmail da barbearia, ative a verificação em 2 etapas e gere uma *Senha de app* em [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). Na Vercel, defina `SMTP_USER` (o Gmail) e `SMTP_PASS` (a senha de app de 16 letras) e faça um novo deploy. Sem isso, "Esqueci minha senha" mostra o contato da barbearia como alternativa.
+6. **Lembretes:** o `vercel.json` agenda `/api/cron/reminders` todo dia às 8h (horário de Brasília). Opcional: defina `CRON_SECRET` para proteger a rota.
 
 Cada push na `main` gera um novo deploy; branches geram previews.
